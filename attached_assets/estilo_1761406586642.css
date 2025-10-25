@@ -1,0 +1,86 @@
+/* Estilo base con la fuente Inter */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Clases para gestionar las vistas de la SPA */
+.view {
+    display: none; /* Oculta todas las vistas por defecto */
+}
+
+.view.active {
+    display: block; /* Muestra solo la vista activa */
+}
+
+/* Pequeña animación para la aparición de elementos */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* === Estilos específicos del Calendario (Paleta Dorada) === */
+
+/* Día disponible */
+#calendar-grid .booking-day {
+    transition: background-color 0.2s, color 0.2s;
+}
+
+/* Día "Hoy" */
+#calendar-grid .booking-day.today {
+    background-color: rgba(198, 169, 105, 0.2); /* dorado/20 */
+    color: #C6A969; /* dorado */
+    font-weight: 600;
+}
+
+/* Día seleccionado */
+#calendar-grid .booking-day.selected {
+    background-color: #C6A969; /* dorado */
+    color: white;
+}
+
+/* Hover en día disponible (que no esté seleccionado) */
+#calendar-grid .booking-day:not(.selected):hover {
+    background-color: rgba(198, 169, 105, 0.1); /* dorado/10 */
+}
+
+/* === Estilos Botones de Hora (Paleta Dorada) === */
+.time-slot-btn {
+    border: 1px solid #C6A969; /* dorado */
+    color: #C6A969; /* dorado */
+    border-radius: 0.5rem; /* rounded-lg */
+    padding: 0.5rem 0; /* py-2 */
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.time-slot-btn:hover:not(:disabled) {
+    background-color: #C6A969; /* dorado */
+    color: white;
+}
+
+.time-slot-btn.selected {
+    background-color: #C6A969; /* dorado */
+    color: white;
+}
+
+.time-slot-btn:disabled,
+.time-slot-btn.time-slot-disabled {
+    border-color: #D1D5DB; /* gris-claro */
+    color: #A8A29E; /* stone-400 */
+    cursor: not-allowed;
+    background-color: transparent;
+}
+
+
+/* === Estilos del Modal del Blog (Prose) === */
+.prose h1, .prose h2, .prose h3, .prose h4 {
+    color: #4E443A; /* marron */
+}
+
+.prose strong {
+    color: #4E443A; /* marron */
+}
+

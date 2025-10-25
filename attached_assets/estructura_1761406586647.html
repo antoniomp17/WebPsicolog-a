@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <!-- CORRECCIÓN: Se ha corregido el charset a UTF-8 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Psicología y Bienestar - Cursos y Terapia</title>
+    <!-- Carga de Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuración de Tailwind para la nueva paleta de colores elegantes -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'crema': '#FDFBF5', // Fondo principal
+                        'beige': '#F0EDE7', // Fondo secundario (gradientes, tarjetas)
+                        'arena': '#E7D4B5', // Acento suave
+                        'dorado': '#C6A969', // Acento principal (botones, enlaces)
+                        'gris-claro': '#D1D5DB', // Gris para bordes o fondos
+                        'gris-medio': '#6B7280', // Gris para texto secundario
+                        'marron': '#4E443A', // Texto principal y footer
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Carga de la fuente Inter --><link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Iconos (Feather Icons) --><script src="https://unpkg.com/feather-icons"></script>
+    
+    <!-- CSS Personalizado --><link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-crema text-marron">
+
+    <!-- =========== Barra de Navegación =========== -->
+    <header class="bg-white/90 shadow-sm sticky top-0 z-50 backdrop-blur-sm">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="#" class="nav-link text-2xl font-bold text-marron" data-view="home">PsicoBienestar</a>
+                </div>
+                
+                <!-- Navegación de Escritorio -->
+                <div class="hidden md:flex md:items-center md:space-x-8">
+                    <a href="#" class="nav-link text-marron hover:text-dorado" data-view="home">Inicio</a>
+                    <a href="#" class="nav-link text-marron hover:text-dorado" data-view="about">Sobre Mí</a>
+                    <a href="#" class="nav-link text-marron hover:text-dorado" data-view="services">Terapia</a>
+                    <a href="#" class="nav-link text-marron hover:text-dorado font-semibold" data-view="courses">Cursos</a>
+                    <a href="#" class="nav-link text-marron hover:text-dorado" data-view="blog">Artículos</a>
+                    <a href="#" class="nav-link text-marron hover:text-dorado" data-view="student-area">Acceso Alumnos</a>
+                    <a href="#" class="nav-link bg-dorado text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition shadow-md" data-view="booking">Agendar Cita</a>
+                </div>
+                
+                <!-- Botón de Menú Móvil -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-marron hover:text-dorado focus:outline-none">
+                        <i data-feather="menu" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Menú Móvil (Oculto por defecto) -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white shadow-lg absolute top-16 left-0 right-0 z-40">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 flex flex-col">
+                <a href="#" class="nav-link mobile-nav-link text-marron hover:bg-beige block px-3 py-2 rounded-md text-base font-medium" data-view="home">Inicio</a>
+                <a href="#" class="nav-link mobile-nav-link text-marron hover:bg-beige block px-3 py-2 rounded-md text-base font-medium" data-view="about">Sobre Mí</a>
+                <a href="#" class="nav-link mobile-nav-link text-marron hover:bg-beige block px-3 py-2 rounded-md text-base font-medium" data-view="services">Terapia</a>
+                <a href="#" class="nav-link mobile-nav-link text-marron hover:bg-beige block px-3 py-2 rounded-md text-base font-medium" data-view="courses">Cursos</a>
+                <a href="#" class="nav-link mobile-nav-link text-marron hover:bg-beige block px-3 py-2 rounded-md text-base font-medium" data-view="blog">Artículos</a>
+                <a href="#" class="nav-link mobile-nav-link text-marron hover:bg-beige block px-3 py-2 rounded-md text-base font-medium" data-view="student-area">Acceso Alumnos</a>
+                <a href="#" class="nav-link mobile-nav-link bg-dorado text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-opacity-90 transition shadow-md" data-view="booking">Agendar Cita</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- =========== Contenedor Principal de Vistas =========== -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <!-- ===== Vista 1: INICIO ===== -->
+        <section id="home" class="view active fade-in">
+            <div class="relative bg-gradient-to-r from-beige to-gris-claro/30 p-8 md:p-16 rounded-2xl overflow-hidden text-center shadow-lg">
+                <h1 class="text-4xl md:text-5xl font-bold text-marron mb-4">
+                    Encuentra tu equilibrio. Crece con nosotros.
+                </h1>
+                <p class="text-lg text-marron/80 max-w-2xl mx-auto mb-8">
+                    Descubre nuestros cursos de psicología y desarrollo personal, o agenda una sesión de terapia individual.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="#" class="nav-link bg-dorado text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-opacity-90 shadow-md transition duration-200" data-view="courses">
+                        Explorar Cursos
+                    </a>
+                    <a href="#" class="nav-link bg-white text-dorado border border-dorado px-8 py-3 rounded-lg text-lg font-medium hover:bg-beige shadow-md transition duration-200" data-view="booking">
+                        Agendar Sesión
+                    </a>
+                </div>
+            </div>
+
+            <!-- Previsualización de Cursos -->
+            <div class="mt-16">
+                <h2 class="text-3xl font-bold text-center text-marron mb-8">Cursos Destacados</h2>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Curso 1 -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform duration-300 hover:scale-[1.02]">
+                        <img src="https://placehold.co/600x400/E7D4B5/4E443A?text=Gestión+Ansiedad" alt="Curso sobre ansiedad" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold text-marron mb-2">Curso: Gestión de la Ansiedad</h3>
+                            <p class="text-gris-medio mb-4 text-sm">Aprende técnicas prácticas para manejar la ansiedad y el estrés en tu día a día.</p>
+                            <span class="text-2xl font-bold text-dorado mr-2">€120</span>
+                            <a href="#" class="nav-link float-right bg-dorado/10 text-dorado px-4 py-2 rounded-lg text-sm font-medium hover:bg-dorado/20" data-view="courses">Ver más</a>
+                        </div>
+                    </div>
+                    <!-- Curso 2 -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform duration-300 hover:scale-[1.02]">
+                        <img src="https://placehold.co/600x400/F0EDE7/4E443A?text=Mindfulness" alt="Curso sobre mindfulness" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold text-marron mb-2">Taller: Mindfulness y Bienestar</h3>
+                            <p class="text-gris-medio mb-4 text-sm">Descubre el poder de la atención plena para mejorar tu concentración y bienestar emocional.</p>
+                            <span class="text-2xl font-bold text-dorado mr-2">€80</span>
+                            <a href="#" class="nav-link float-right bg-dorado/10 text-dorado px-4 py-2 rounded-lg text-sm font-medium hover:bg-dorado/20" data-view="courses">Ver más</a>
+                        </div>
+                    </div>
+                    <!-- Curso 3 -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform duration-300 hover:scale-[1.02] md:col-span-2 lg:col-span-1">
+                        <img src="https://placehold.co/600x400/D1D5DB/4E443A?text=Comunicación" alt="Curso sobre comunicación" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold text-marron mb-2">Curso: Comunicación Asertiva</h3>
+                            <p class="text-gris-medio mb-4 text-sm">Desarrolla habilidades para comunicarte de forma efectiva y respetuosa en tus relaciones.</p>
+                            <span class="text-2xl font-bold text-dorado mr-2">€150</span>
+                            <a href="#" class="nav-link float-right bg-dorado/10 text-dorado px-4 py-2 rounded-lg text-sm font-medium hover:bg-dorado/20" data-view="courses">Ver más</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== NUEVO: Sección Testimonios ===== -->
+            <div class="mt-20">
+                <h2 class="text-3xl font-bold text-center text-marron mb-10">Lo que dicen mis alumnos</h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Testimonio 1 -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg relative">
+                        <div class="absolute top-0 left-6 -translate-y-1/2 text-6xl text-beige opacity-75">“</div>
+                        <p class="text-gris-medio italic z-10 relative">"El curso de gestión de ansiedad cambió mi vida. Las herramientas son prácticas y fáciles de aplicar. ¡Totalmente recomendado!"</p>
+                        <p class="font-semibold text-marron mt-4">- Ana G.</p>
+                    </div>
+                    <!-- Testimonio 2 -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg relative">
+                        <div class="absolute top-0 left-6 -translate-y-1/2 text-6xl text-beige opacity-75">“</div>
+                        <p class="text-gris-medio italic z-10 relative">"Increíble el taller de Mindfulness. He logrado conectar conmigo misma y reducir mi estrés diario. La Dra. [Tu Apellido] explica de maravilla."</p>
+                        <p class="font-semibold text-marron mt-4">- Carlos M.</p>
+                    </div>
+                    <!-- Testimonio 3 -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg relative">
+                        <div class="absolute top-0 left-6 -translate-y-1/2 text-6xl text-beige opacity-75">“</div>
+                        <p class="text-gris-medio italic z-10 relative">"Dudaba de la terapia online, pero ha sido un acierto. Me he sentido escuchada y comprendida desde el primer minuto."</p>
+                        <p class="font-semibold text-marron mt-4">- Lucía F.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== NUEVO: Sección Preguntas Frecuentes (FAQ) ===== -->
+            <div class="mt-20 max-w-3xl mx-auto">
+                <h2 class="text-3xl font-bold text-center text-marron mb-10">Preguntas Frecuentes</h2>
+                <div class="space-y-4">
+                    <!-- FAQ 1 -->
+                    <details class="group bg-white p-6 rounded-lg shadow-sm cursor-pointer">
+                        <summary class="flex justify-between items-center font-semibold text-marron text-lg group-open:text-dorado">
+                            ¿Cómo funcionan las inscripciones a los cursos?
+                            <i data-feather="chevron-down" class="w-5 h-5 group-open:rotate-180 transition-transform"></i>
+                        </summary>
+                        <p class="text-gris-medio mt-3">
+                            Simplemente ve a la sección "Cursos", elige el que te interesa y haz clic en "Inscribirse". Se abrirá una pasarela de pago segura. Una vez completado el pago, recibirás un email con tus datos de acceso al "Acceso Alumnos".
+                        </p>
+                    </details>
+                    <!-- FAQ 2 -->
+                    <details class="group bg-white p-6 rounded-lg shadow-sm cursor-pointer">
+                        <summary class="flex justify-between items-center font-semibold text-marron text-lg group-open:text-dorado">
+                            ¿Qué formato tienen las sesiones de terapia?
+                            <i data-feather="chevron-down" class="w-5 h-5 group-open:rotate-180 transition-transform"></i>
+                        </summary>
+                        <p class="text-gris-medio mt-3">
+                            Las sesiones son 100% online a través de una plataforma de videollamada segura (Google Meet o similar). Tienen una duración de 50 minutos y la frecuencia habitual es semanal, aunque se adapta a tus necesidades.
+                        </p>
+                    </details>
+                    <!-- FAQ 3 -->
+                    <details class="group bg-white p-6 rounded-lg shadow-sm cursor-pointer">
+                        <summary class="flex justify-between items-center font-semibold text-marron text-lg group-open:text-dorado">
+                            ¿Tendré acceso al material del curso para siempre?
+                            <i data-feather="chevron-down" class="w-5 h-5 group-open:rotate-180 transition-transform"></i>
+                        </summary>
+                        <p class="text-gris-medio mt-3">
+                            ¡Sí! Una vez te inscribas en un curso, tendrás acceso ilimitado y para siempre a todos los materiales (vídeos, PDFs, ejercicios) a través del portal de alumnos.
+                        </p>
+                    </details>
+                </div>
+            </div>
+
+            <!-- ===== NUEVO: Sección Newsletter ===== -->
+            <div class="mt-20 bg-beige p-8 md:p-12 rounded-2xl text-center shadow-lg">
+                 <h2 class="text-3xl font-bold text-marron mb-4">Únete a nuestra comunidad</h2>
+                <p class="text-lg text-marron/80 max-w-2xl mx-auto mb-6">
+                    Suscríbete a mi newsletter y recibe artículos, recursos gratuitos y descuentos exclusivos para futuros cursos.
+                </p>
+                <form class="flex flex-col sm:flex-row justify-center max-w-lg mx-auto gap-3">
+                    <input type="email" placeholder="Tu mejor email" class="flex-grow px-5 py-3 rounded-lg border border-gris-claro focus:ring-dorado focus:border-dorado" required>
+                    <button type="submit" class="bg-dorado text-white px-8 py-3 rounded-lg text-base font-medium hover:bg-opacity-90 shadow-md">
+                        Suscribirme
+                    </button>
+                </form>
+            </div>
+
+        </section>
+
+        <!-- ===== NUEVO: Vista 1.5: SOBRE MÍ ===== -->
+        <section id="about" class="view fade-in">
+            <h2 class="text-3xl font-bold text-center text-marron mb-10">Conóceme</h2>
+            <div class="bg-white p-8 md:p-12 rounded-xl shadow-lg">
+                <div class="grid md:grid-cols-3 gap-8 md:gap-12 items-center">
+                    <div class="md:col-span-1">
+                        <img src="https://placehold.co/400x500/E7E5E4/4E443A?text=Tu+Foto" alt="Foto profesional de la psicóloga" class="rounded-xl shadow-md w-full object-cover aspect-[4/5]">
+                    </div>
+                    <div class="md:col-span-2">
+                        <h3 class="text-3xl font-bold text-marron mb-4">Hola, soy [Tu Nombre]</h3>
+                        <p class="text-lg font-semibold text-gris-medio mb-4">Psicóloga General Sanitaria | N.º Col. [Tu Número]</p>
+                        <p class="text-marron/90 mb-4">
+                            Mi pasión es acompañar a las personas en su camino de autoconocimiento y bienestar emocional. Creo firmemente en que todos tenemos los recursos internos para superar los obstáculos, y mi trabajo es ayudarte a descubrirlos y potenciarlos.
+                        </p>
+                        <p class="text-marron/90 mb-4">
+                            Me especializo en [Tu Especialidad, ej: terapia cognitivo-conductual, EMDR, ansiedad, autoestima] y mi enfoque se basa en la empatía, la cercanía y la evidencia científica.
+                        </p>
+                        <h4 class="text-xl font-semibold text-marron mt-6 mb-3">Mi Filosofía de Cursos</h4>
+                        <p class="text-marron/90">
+                            He creado estos cursos para democratizar la psicología y ofrecer herramientas prácticas que puedas aplicar en tu día a día. Mi objetivo es ir más allá de la teoría y proporcionarte un aprendizaje transformador, ameno y basado en la ciencia, para que puedas ser tu propia fuente de bienestar.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ===== Vista 2: TERAPIA ===== -->
+        <section id="services" class="view fade-in">
+            <h2 class="text-3xl font-bold text-center text-marron mb-10">Servicios de Terapia</h2>
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <img src="https://placehold.co/600x400/F0EDE7/4E443A?text=Terapia+Online" alt="Consulta de terapia online" class="rounded-lg shadow-md w-full">
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold text-marron mb-4">Terapia Individual Online</h3>
+                        <p class="text-marron/90 mb-4">
+                            Un espacio seguro y confidencial para explorar tus pensamientos, emociones y comportamientos. Te acompañaré en tu proceso de autoconocimiento y cambio, utilizando enfoques basados en la evidencia como la Terapia Cognitivo-Conductual y EMDR.
+                        </p>
+                        <ul class="list-disc list-inside text-marron/90 space-y-2 mb-6">
+                            <li>Gestión de la ansiedad y estrés.</li>
+                            <li>Superación de depresión y bajo estado de ánimo.</li>
+                            <li>Mejora de la autoestima y confianza.</li>
+                            <li>Duelo y gestión de pérdidas.</li>
+                            <li>Trauma y estrés postraumático.</li>
+                        </ul>
+                        <a href="#" class="nav-link bg-dorado text-white px-6 py-3 rounded-lg text-base font-medium hover:bg-opacity-90 shadow-md transition duration-200" data-view="booking">
+                            Quiero agendar una sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Vista 3: CURSOS ===== -->
+        <section id="courses" class="view fade-in">
+            <h2 class="text-3xl font-bold text-center text-marron mb-10">Nuestros Cursos y Talleres</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- Plantilla de Tarjeta de Curso -->
+                <div class="course-card bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
+                    <img src="https://placehold.co/600x400/E7D4B5/4E443A?text=Gestión+Ansiedad" alt="Portada del curso de Gestión de Ansiedad" class="w-full h-48 object-cover">
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-xl font-semibold text-marron mb-2" data-course-title="Curso: Gestión de la Ansiedad">Curso: Gestión de la Ansiedad</h3>
+                        <p class="text-gris-medio mb-4 text-sm flex-grow">Aprende técnicas prácticas y basadas en la ciencia para manejar la ansiedad, el pánico y el estrés crónico en tu vida diaria.</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-2xl font-bold text-dorado" data-course-price="120">€120</span>
+                            <button class="enroll-button bg-dorado text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90">Inscribirse</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="course-card bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
+                    <img src="https://placehold.co/600x400/F0EDE7/4E443A?text=Mindfulness" alt="Portada del taller de Mindfulness" class="w-full h-48 object-cover">
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-xl font-semibold text-marron mb-2" data-course-title="Taller: Mindfulness y Bienestar">Taller: Mindfulness y Bienestar</h3>
+                        <p class="text-gris-medio mb-4 text-sm flex-grow">Un taller intensivo de 4 semanas para descubrir el poder de la atención plena. Mejora tu concentración y bienestar emocional.</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-2xl font-bold text-dorado" data-course-price="80">€80</span>
+                            <button class="enroll-button bg-dorado text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90">Inscribirse</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="course-card bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
+                    <img src="https://placehold.co/600x400/D1D5DB/4E443A?text=Comunicación" alt="Portada del curso de Comunicación Asertiva" class="w-full h-48 object-cover">
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-xl font-semibold text-marron mb-2" data-course-title="Curso: Comunicación Asertiva">Curso: Comunicación Asertiva</h3>
+                        <p class="text-gris-medio mb-4 text-sm flex-grow">Desarrolla habilidades clave para comunicarte de forma efectiva, clara y respetuosa en tus relaciones personales y profesionales.</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-2xl font-bold text-dorado" data-course-price="150">€150</span>
+                            <button class="enroll-button bg-dorado text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90">Inscribirse</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="course-card bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
+                    <img src="https://placehold.co/600x400/E7D4B5/4E443A?text=Autoestima" alt="Portada del programa Sanando la Autoestima" class="w-full h-48 object-cover">
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-xl font-semibold text-marron mb-2" data-course-title="Programa: Sanando la Autoestima">Programa: Sanando la Autoestima</h3>
+                        <p class="text-gris-medio mb-4 text-sm flex-grow">Un programa profundo de 8 semanas para entender el origen de la baja autoestima y construir una relación sólida y compasiva contigo mismo.</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-2xl font-bold text-dorado" data-course-price="250">€250</span>
+                            <button class="enroll-button bg-dorado text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90">Inscribirse</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Fin Plantilla de Tarjeta de Curso -->
+            </div>
+        </section>
+
+        <!-- ===== Vista 4: ARTÍCULOS (BLOG) ===== -->
+        <section id="blog" class="view fade-in">
+            <h2 class="text-3xl font-bold text-center text-marron mb-10">Blog: Artículos y Recursos</h2>
+            <div class="space-y-8">
+                <!-- Artículo 1 -->
+                <article class="article-snippet bg-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row gap-6">
+                    <img src="https://placehold.co/300x200/F0EDE7/4E443A?text=Blog+1" alt="Imagen del artículo sobre Síndrome del Impostor" class="w-full md:w-1/3 h-48 object-cover rounded-lg">
+                    <div class="flex-1">
+                        <h3 class="article-title text-2xl font-semibold text-marron mb-2">¿Qué es el Síndrome del Impostor y cómo superarlo?</h3>
+                        <p class="text-sm text-gris-medio mb-3">Publicado el 20 de Octubre, 2025</p>
+                        <p class="text-marron/90 mb-4">
+                            Muchas personas exitosas sienten en secreto que son un fraude, que no merecen sus logros...
+                        </p>
+                        <button class="read-more-btn text-dorado font-medium hover:underline">Leer más &rarr;</button>
+                        <div class="article-full-content hidden">
+                            <p>Muchas personas exitosas sienten en secreto que son un fraude, que no merecen sus logros y que en cualquier momento serán "descubiertas". A esto se le conoce como el síndrome del impostor.</p>
+                            <p class="mt-4">Este fenómeno, aunque no es un diagnóstico clínico oficial, es increíblemente común y puede afectar a cualquiera, independientemente de su campo o nivel de éxito. Se caracteriza por sentimientos persistentes de duda sobre uno mismo y un miedo internalizado a ser expuesto como un "impostor".</p>
+                            <h4 class="font-semibold mt-4">Estrategias para superarlo:</h4>
+                            <ul class="list-disc list-inside mt-2">
+                                <li>Reconoce y nombra tus sentimientos.</li>
+                                <li>Habla sobre ello con mentores o colegas de confianza.</li>
+                                <li>Lleva un registro de tus logros y éxitos.</li>
+                                <li>Acepta que la perfección no existe.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </article>
+                <!-- Artículo 2 -->
+                <article class="article-snippet bg-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row gap-6">
+                    <img src="https://placehold.co/300x200/F0EDE7/4E443A?text=Blog+2" alt="Imagen del artículo sobre poner límites" class="w-full md:w-1/3 h-48 object-cover rounded-lg">
+                    <div class="flex-1">
+                        <h3 class="article-title text-2xl font-semibold text-marron mb-2">La importancia de poner límites en tus relaciones</h3>
+                        <p class="text-sm text-gris-medio mb-3">Publicado el 15 de Octubre, 2025</p>
+                        <p class="text-marron/90 mb-4">
+                            Poner límites no es egoísta, es una forma esencial de autocuidado y de construir relaciones más sanas y respetuosas...
+                        </p>
+                        <button class="read-more-btn text-dorado font-medium hover:underline">Leer más &rarr;</button>
+                        <div class="article-full-content hidden">
+                            <p>Poner límites no es egoísta, es una forma esencial de autocuidado y de construir relaciones más sanas y respetuosas. Los límites son las "reglas del juego" que establecemos sobre cómo esperamos ser tratados por los demás.</p>
+                            <p class="mt-4">Sin límites claros, es fácil sentirse abrumado, resentido o aprovechado. Aprender a decir "no" de forma asertiva, a comunicar tus necesidades y a proteger tu espacio emocional es fundamental para tu bienestar mental.</p>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- ===== Vista 5: ACCESO ALUMNOS ===== -->
+        <section id="student-area" class="view fade-in">
+            <div class="max-w-xl mx-auto">
+                <!-- Formulario de Registro (se muestra si no hay perfil) -->
+                <div id="register-form-container" class="bg-white p-8 rounded-xl shadow-lg">
+                    <h2 class="text-3xl font-bold text-center text-marron mb-8">Crea tu cuenta de Alumno</h2>
+                    <form id="student-register-form">
+                        <div class="mb-4">
+                            <label for="email" class="block text-sm font-medium text-marron mb-1">Email</label>
+                            <input type="email" id="email" name="email" class="w-full px-4 py-2 border border-gris-claro rounded-lg focus:ring-dorado focus:border-dorado" placeholder="tu@email.com" required>
+                        </div>
+                        <div class="mb-6">
+                            <label for="name" class="block text-sm font-medium text-marron mb-1">Nombre Completo</label>
+                            <input type="text" id="name" name="name" class="w-full px-4 py-2 border border-gris-claro rounded-lg focus:ring-dorado focus:border-dorado" placeholder="Tu nombre" required>
+                        </div>
+                        <button type="submit" class="w-full bg-dorado text-white px-6 py-3 rounded-lg text-base font-medium hover:bg-opacity-90 shadow-md transition duration-200">
+                            Registrarme
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Dashboard del Alumno (Oculto) -->
+                <div id="student-dashboard-container" class="hidden bg-white p-8 rounded-xl shadow-lg">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-3xl font-bold text-marron">Mi Panel de Alumno</h2>
+                    </div>
+                    <p class="text-lg text-marron/90 mb-8">¡Bienvenido/a, <span id="student-name" class="font-semibold"></span>!</p>
+                    
+                    <h3 class="text-xl font-semibold text-marron mb-4">Mis Cursos</h3>
+                    <div class="space-y-4">
+                        <!-- Curso 1 -->
+                        <div class="bg-beige p-4 rounded-lg">
+                            <h4 class="font-semibold text-marron">Curso: Gestión de la Ansiedad</h4>
+                            <p class="text-gris-medio mb-3">Progreso: 75%</p>
+                            <div class="w-full bg-gris-claro rounded-full h-2.5">
+                                <div class="bg-dorado h-2.5 rounded-full" style="width: 75%"></div>
+                            </div>
+                            <div class="mt-4">
+                                <h5 class="font-medium mb-2">Materiales del curso:</h5>
+                                <a href="#" class="flex items-center gap-2 text-dorado hover:underline mb-1">
+                                    <i data-feather="file-text" class="w-4 h-4"></i> Módulo 1: Introducción (PDF)
+                                </a>
+                                <a href="#" class="flex items-center gap-2 text-dorado hover:underline mb-1">
+                                    <i data-feather="video" class="w-4 h-4"></i> Módulo 2: Técnicas de Respiración (Video)
+                                </a>
+                                <a href="#" class="flex items-center gap-2 text-gris-medio/70 cursor-not-allowed">
+                                    <i data-feather="lock" class="w-4 h-4"></i> Módulo 3: Reestructuración Cognitiva (Bloqueado)
+                                </a>
+                            </div>
+                        </div>
+                        <!-- Curso 2 -->
+                        <div class="bg-beige p-4 rounded-lg">
+                            <h4 class="font-semibold text-marron">Taller: Mindfulness y Bienestar</h4>
+                            <p class="text-gris-medio mb-3">Progreso: 10%</p>
+                            <div class="w-full bg-gris-claro rounded-full h-2.5">
+                                <div class="bg-dorado h-2.5 rounded-full" style="width: 10%"></div>
+                            </div>
+                             <div class="mt-4">
+                                <h5 class="font-medium mb-2">Materiales del curso:</h5>
+                                <a href="#" class="flex items-center gap-2 text-dorado hover:underline mb-1">
+                                    <i data-feather="video" class="w-4 h-4"></i> Video de Bienvenida (Video)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Vista 6: AGENDAR CITA ===== -->
+        <section id="booking" class="view fade-in">
+            <h2 class="text-3xl font-bold text-center text-marron mb-10">Agenda tu Sesión</h2>
+            <div class="bg-white p-8 rounded-xl shadow-lg max-w-4xl mx-auto">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Calendario -->
+                    <div>
+                        <h3 class="text-xl font-semibold text-marron mb-4">1. Selecciona un día</h3>
+                        <div class="bg-beige p-4 rounded-lg shadow-inner">
+                            <div class="flex justify-between items-center mb-3">
+                                <button id="prev-month-btn" class="text-dorado hover:text-marron p-1 rounded-full hover:bg-dorado/20">
+                                    <i data-feather="arrow-left" class="w-5 h-5"></i>
+                                </button>
+                                <span id="current-month-year" class="font-semibold text-lg text-marron"></span>
+                                <button id="next-month-btn" class="text-dorado hover:text-marron p-1 rounded-full hover:bg-dorado/20">
+                                    <i data-feather="arrow-right" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1 text-center text-sm font-medium text-gris-medio mb-2">
+                                <span>Lu</span>
+                                <span>Ma</span>
+                                <span>Mi</span>
+                                <span>Ju</span>
+                                <span>Vi</span>
+                                <span>Sá</span>
+                                <span>Do</span>
+                            </div>
+                            <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-sm">
+                                <!-- Los días se generarán dinámicamente aquí -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Horarios y Confirmación -->
+                    <div>
+                        <!-- Paso 2: Seleccionar Hora -->
+                        <div id="booking-step-2" class="hidden">
+                            <h3 class="text-xl font-semibold text-marron mb-4">2. Selecciona una hora</h3>
+                            <p class="text-gris-medio mb-4">Horarios disponibles para el <span id="selected-date" class="font-semibold text-marron"></span>:</p>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button class="time-slot-btn" data-time="09:00">09:00</button>
+                                <button class="time-slot-btn" data-time="10:00">10:00</button>
+                                <button class="time-slot-btn" data-time="11:00">11:00</button>
+                                <button class="time-slot-btn time-slot-disabled" disabled>12:00</button>
+                                <button class="time-slot-btn" data-time="16:00">16:00</button>
+                                <button class="time-slot-btn" data-time="17:00">17:00</button>
+                            </div>
+                        </div>
+
+                        <!-- Paso 3: Confirmar -->
+                        <div id="booking-step-3" class="hidden mt-6">
+                            <h3 class="text-xl font-semibold text-marron mb-4">3. Confirma tus datos</h3>
+                            <div class="bg-beige p-4 rounded-lg mb-4">
+                                <p class="font-semibold text-marron">Reserva:</p>
+                                <p class="text-marron/90">Fecha: <span id="confirm-date"></span></an>
+                                <p class="text-marron/90">Hora: <span id="confirm-time"></span></p>
+                            </div>
+                            <form id="booking-confirm-form">
+                                <div class="mb-3">
+                                    <label for="book-name" class="block text-sm font-medium text-marron mb-1">Nombre Completo</label>
+                                    <input type="text" id="book-name" class="w-full px-4 py-2 border border-gris-claro rounded-lg focus:ring-dorado focus:border-dorado" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="book-email" class="block text-sm font-medium text-marron mb-1">Email</label>
+                                    <input type="email" id="book-email" class="w-full px-4 py-2 border border-gris-claro rounded-lg focus:ring-dorado focus:border-dorado" required>
+                                </div>
+                                <button type="submit" class="w-full bg-dorado text-white px-6 py-3 rounded-lg font-medium hover:bg-opacity-90 transition shadow-md">Confirmar Cita</button>
+                            </form>
+                        </div>
+
+                        <!-- Mensaje de éxito -->
+                        <div id="booking-success" class="hidden mt-6 p-4 bg-dorado/10 text-dorado rounded-lg">
+                            ¡Cita guardada en la base de datos! Recibirás un email con los detalles.
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- =========== Footer =========== -->
+    <footer class="bg-marron text-crema mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Columna 1: Logo y Social -->
+                <div>
+                    <h3 class="text-2xl font-bold text-white mb-4">PsicoBienestar</h3>
+                    <p class="text-beige/70 mb-4">Tu espacio para el crecimiento personal y el bienestar emocional.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-beige/70 hover:text-white"><i data-feather="instagram"></i></a>
+                        <a href="#" class="text-beige/70 hover:text-white"><i data-feather="facebook"></i></a>
+                        <a href="#" class="text-beige/70 hover:text-white"><i data-feather="linkedin"></i></a>
+                    </div>
+                </div>
+                <!-- Columna 2: Enlaces Rápidos -->
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">Enlaces</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="nav-link hover:text-white" data-view="about">Sobre Mí</a></li>
+                        <li><a href="#" class="nav-link hover:text-white" data-view="services">Terapia</a></li>
+                        <li><a href="#" class="nav-link hover:text-white" data-view="courses">Cursos</a></li>
+                        <li><a href="#" class="nav-link hover:text-white" data-view="blog">Artículos</a></li>
+                        <li><a href="#" class="nav-link hover:text-white" data-view="student-area">Acceso Alumnos</a></li>
+                    </ul>
+                </div>
+                <!-- Columna 3: Contacto -->
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">Contacto</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center gap-2">
+                            <i data-feather="mail" class="w-4 h-4"></i>
+                            <span>hola@psicobienestar.com</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-feather="info" class="w-4 h-4"></i>
+                            <span>Terapia solo online (España)</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 border-t border-stone-700 pt-6 text-center text-sm text-stone-500">
+                <p>&copy; 2025 PsicoBienestar. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- =========== Modales (Ocultos por defecto) =========== -->
+    
+    <!-- Modal de Pago (Simulación) -->
+    <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full relative">
+            <button id="close-payment-modal" class="absolute top-4 right-4 text-gris-medio hover:text-marron">
+                <i data-feather="x" class="w-6 h-6"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-marron mb-2">Realizar Pago</h3>
+            <p class="text-marron/90 mb-4">Estás a punto de inscribirte en:</p>
+            <div class="bg-beige p-4 rounded-lg mb-6">
+                <h4 id="modal-course-title" class="text-lg font-semibold text-marron"></h4>
+                <p id="modal-course-price" class="text-xl font-bold text-dorado"></p>
+            </div>
+            
+            <form id="payment-form">
+                <div class="space-y-4">
+                    <div>
+                        <label for="card-name" class="block text-sm font-medium text-marron mb-1">Nombre en la tarjeta</label>
+                        <input type="text" id="card-name" class="w-full px-4 py-2 border border-gris-claro rounded-lg focus:ring-dorado focus:border-dorado" required>
+                    </div>
+                    <div>
+                        <label for="card-number" class="block text-sm font-medium text-marron mb-1">Número de tarjeta</label>
+                        <input type="text" id="card-number" class="w-full px-4 py-2 border border-gris-claro rounded-lg focus:ring-dorado focus:border-dorado" placeholder="0000 0000 0000 0000" required>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label for="card-expiry" class="block text-sm font-medium text-marron mb-1">Vencimiento (MM/AA)</label>
+                            <input type="text" id="card-expiry" class="w-full px-4 py-2 border border-gris-claro rounded-lg focus:ring-dorado focus:border-dorado" placeholder="MM/AA" required>
+                        </div>
+                        <div class="flex-1">
+                            <label for="card-cvc" class="block text-sm font-medium text-marron mb-1">CVC</label>
+                            <input type="text" id="card-cvc" class="w-full px-4 py-2 border border-gris-claro rounded-lg focus:ring-dorado focus:border-dorado" placeholder="123" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-dorado text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-opacity-90 shadow-md">
+                        Pagar Ahora
+                    </button>
+                </div>
+            </form>
+            <div id="payment-success" class="hidden mt-4 p-4 bg-dorado/10 text-dorado rounded-lg text-center">
+                ¡Pago realizado con éxito! Recibirás acceso al curso en tu email.
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Artículo (Blog) -->
+    <div id="article-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full relative max-h-[90vh] overflow-y-auto">
+            <button id="close-article-modal" class="absolute top-4 right-4 text-gris-medio hover:text-marron">
+                <i data-feather="x" class="w-6 h-6"></i>
+            </button>
+            <h3 id="article-modal-title" class="text-3xl font-bold text-marron mb-6"></h3>
+            <div id="article-modal-content" class="prose prose-lg text-marron/90 max-w-none">
+                <!-- Contenido del artículo se insertará aquí -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- =========== Scripts =========== -->
+    
+    <!-- SDK de Firebase -->
+    <script type="module">
+        // Importa las funciones que necesitas de los SDKs
+        import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, addDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+      
+        // Pasa las funciones y variables globales a tu script principal
+        window.firebase = {
+            initializeApp,
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged,
+            setLogLevel,
+            getFirestore,
+            doc,
+            setDoc,
+            addDoc,
+            collection,
+            onSnapshot
+        };
+    </script>
+    
+    <!-- Tu Lógica de Aplicación -->
+    <script type="module" src="app.js"></script>
+
+</body>
+</html>
+
