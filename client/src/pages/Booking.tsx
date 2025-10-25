@@ -339,6 +339,7 @@ export default function Booking() {
                     <Label htmlFor="book-name">Nombre Completo</Label>
                     <Input
                       id="book-name"
+                      name="book-name"
                       placeholder="Juan Pérez"
                       required
                       data-testid="input-booking-name"
@@ -349,6 +350,7 @@ export default function Booking() {
                     <Label htmlFor="book-email">Correo Electrónico</Label>
                     <Input
                       id="book-email"
+                      name="book-email"
                       type="email"
                       placeholder="juan@ejemplo.com"
                       required
