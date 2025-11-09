@@ -1,20 +1,26 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, Clock, BarChart } from "lucide-react";
-import { courses } from "@/lib/data";
+import { CheckCircle2, Clock, BarChart, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import type { Course } from "@shared/schema";
 
 export default function Courses() {
-  const [selectedCourse, setSelectedCourse] = useState<typeof courses[0] | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const { toast } = useToast();
 
-  const handleEnroll = (course: typeof courses[0]) => {
+  // Fetch all courses from API
+  const { data: courses = [], isLoading: isLoadingCourses } = useQuery<Course[]>({
+    queryKey: ["/api/courses"],
+  });
+
+  const handleEnroll = (course: Course) => {
     setSelectedCourse(course);
     setPaymentSuccess(false);
   };
@@ -45,51 +51,57 @@ export default function Courses() {
       </section>
 
       {/* Courses Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {courses.map((course) => (
-          <Card
-            key={course.id}
-            className="overflow-hidden transition-transform duration-300 hover:scale-[1.02] shadow-lg border-card-border flex flex-col"
-            data-testid={`card-course-${course.id}`}
-          >
-            <img
-              src={course.image}
-              alt={course.title}
-              className="w-full h-48 object-cover"
-              data-testid={`img-course-${course.id}`}
-            />
-            <CardHeader className="flex-grow">
-              <div className="flex flex-wrap gap-2 mb-3">
-                <Badge variant="secondary" className="text-xs" data-testid={`badge-level-${course.id}`}>
-                  {course.level}
-                </Badge>
-                <Badge variant="outline" className="text-xs" data-testid={`badge-duration-${course.id}`}>
-                  <Clock className="w-3 h-3 mr-1" />
-                  {course.duration}
-                </Badge>
-              </div>
-              <h3 className="text-xl font-semibold text-marron mb-2" data-testid={`text-course-title-${course.id}`}>
-                {course.title}
-              </h3>
-              <p className="text-sm text-gris-medio" data-testid={`text-course-description-${course.id}`}>
-                {course.description}
-              </p>
-            </CardHeader>
-            <CardFooter className="flex flex-wrap justify-between items-center gap-2 pt-0">
-              <span className="text-3xl font-bold text-dorado" data-testid={`text-course-price-${course.id}`}>
-                €{course.price}
-              </span>
-              <Button
-                onClick={() => handleEnroll(course)}
-                className="bg-dorado hover:bg-dorado/90 text-white"
-                data-testid={`button-enroll-${course.id}`}
-              >
-                Inscribirse
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+      {isLoadingCourses ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-dorado" />
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {courses.map((course) => (
+            <Card
+              key={course.id}
+              className="overflow-hidden transition-transform duration-300 hover:scale-[1.02] shadow-lg border-card-border flex flex-col"
+              data-testid={`card-course-${course.id}`}
+            >
+              <img
+                src={course.imageUrl}
+                alt={course.title}
+                className="w-full h-48 object-cover"
+                data-testid={`img-course-${course.id}`}
+              />
+              <CardHeader className="flex-grow">
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <Badge variant="secondary" className="text-xs" data-testid={`badge-level-${course.id}`}>
+                    {course.level}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs" data-testid={`badge-duration-${course.id}`}>
+                    <Clock className="w-3 h-3 mr-1" />
+                    {course.durationWeeks} semanas
+                  </Badge>
+                </div>
+                <h3 className="text-xl font-semibold text-marron mb-2" data-testid={`text-course-title-${course.id}`}>
+                  {course.title}
+                </h3>
+                <p className="text-sm text-gris-medio" data-testid={`text-course-description-${course.id}`}>
+                  {course.shortDescription}
+                </p>
+              </CardHeader>
+              <CardFooter className="flex flex-wrap justify-between items-center gap-2 pt-0">
+                <span className="text-3xl font-bold text-dorado" data-testid={`text-course-price-${course.id}`}>
+                  €{course.price}
+                </span>
+                <Button
+                  onClick={() => handleEnroll(course)}
+                  className="bg-dorado hover:bg-dorado/90 text-white"
+                  data-testid={`button-enroll-${course.id}`}
+                >
+                  Inscribirse
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Payment Modal */}
       <Dialog open={!!selectedCourse} onOpenChange={() => setSelectedCourse(null)}>

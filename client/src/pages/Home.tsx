@@ -1,11 +1,17 @@
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown } from "lucide-react";
-import { courses, testimonials, faqs } from "@/lib/data";
+import { ChevronDown, Loader2 } from "lucide-react";
+import { testimonials, faqs } from "@/lib/data";
+import type { Course } from "@shared/schema";
 
 export default function Home() {
+  // Fetch featured courses from API
+  const { data: featuredCourses = [], isLoading: isLoadingCourses } = useQuery<Course[]>({
+    queryKey: ["/api/courses/featured"],
+  });
   return (
     <div className="animate-fade-in">
       {/* Hero Section */}
@@ -39,40 +45,46 @@ export default function Home() {
         <h2 className="text-3xl font-bold text-center text-marron mb-8" data-testid="text-cursos-destacados">
           Cursos Destacados
         </h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {courses.slice(0, 3).map((course) => (
-            <Card
-              key={course.id}
-              className="overflow-hidden transition-transform duration-300 hover:scale-[1.02] shadow-lg border-card-border"
-              data-testid={`card-course-${course.id}`}
-            >
-              <img
-                src={course.image}
-                alt={course.title}
-                className="w-full h-48 object-cover"
-                data-testid={`img-course-${course.id}`}
-              />
-              <CardHeader>
-                <h3 className="text-xl font-semibold text-marron mb-2" data-testid={`text-course-title-${course.id}`}>
-                  {course.title}
-                </h3>
-                <p className="text-sm text-gris-medio" data-testid={`text-course-description-${course.id}`}>
-                  {course.description.substring(0, 100)}...
-                </p>
-              </CardHeader>
-              <CardFooter className="flex flex-wrap justify-between items-center gap-2">
-                <span className="text-2xl font-bold text-dorado" data-testid={`text-course-price-${course.id}`}>
-                  €{course.price}
-                </span>
-                <Link href="/cursos" data-testid={`link-ver-curso-${course.id}`}>
-                  <Button variant="secondary" size="sm" className="hover-elevate active-elevate-2">
-                    Ver más
-                  </Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+        {isLoadingCourses ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-dorado" />
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {featuredCourses.map((course) => (
+              <Card
+                key={course.id}
+                className="overflow-hidden transition-transform duration-300 hover:scale-[1.02] shadow-lg border-card-border"
+                data-testid={`card-course-${course.id}`}
+              >
+                <img
+                  src={course.imageUrl}
+                  alt={course.title}
+                  className="w-full h-48 object-cover"
+                  data-testid={`img-course-${course.id}`}
+                />
+                <CardHeader>
+                  <h3 className="text-xl font-semibold text-marron mb-2" data-testid={`text-course-title-${course.id}`}>
+                    {course.title}
+                  </h3>
+                  <p className="text-sm text-gris-medio" data-testid={`text-course-description-${course.id}`}>
+                    {course.shortDescription}
+                  </p>
+                </CardHeader>
+                <CardFooter className="flex flex-wrap justify-between items-center gap-2">
+                  <span className="text-2xl font-bold text-dorado" data-testid={`text-course-price-${course.id}`}>
+                    €{course.price}
+                  </span>
+                  <Link href="/cursos" data-testid={`link-ver-curso-${course.id}`}>
+                    <Button variant="secondary" size="sm" className="hover-elevate active-elevate-2">
+                      Ver más
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Testimonials */}
