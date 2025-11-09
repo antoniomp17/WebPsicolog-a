@@ -163,6 +163,7 @@ export default function StudentArea() {
                     </Button>
                   ) : (
                     <Button
+                      onClick={() => navigate(`/checkout/${enrollment.id}`)}
                       variant="outline"
                       className="w-full border-amber-500 text-amber-600 hover:bg-amber-50"
                       data-testid={`button-complete-payment-${course.id}`}

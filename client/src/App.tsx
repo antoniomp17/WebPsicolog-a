@@ -14,6 +14,8 @@ import StudentArea from "@/pages/StudentArea";
 import Booking from "@/pages/Booking";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import Checkout from "@/pages/Checkout";
+import PaymentSuccess from "@/pages/PaymentSuccess";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -28,9 +30,12 @@ function Router() {
           <Route path="/cursos" component={Courses} />
           <Route path="/articulos" component={Blog} />
           <Route path="/alumnos" component={StudentArea} />
+          <Route path="/acceso-alumnos" component={StudentArea} />
           <Route path="/agendar" component={Booking} />
           <Route path="/login" component={Login} />
           <Route path="/registro" component={Register} />
+          <Route path="/checkout/:enrollmentId" component={Checkout} />
+          <Route path="/pago-exitoso" component={PaymentSuccess} />
           <Route component={NotFound} />
         </Switch>
       </main>

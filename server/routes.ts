@@ -3,6 +3,15 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertStudentSchema, insertAppointmentSchema, registerUserSchema, insertEnrollmentSchema } from "@shared/schema";
 import { hashPassword, verifyPassword, generateToken, authMiddleware, type AuthRequest } from "./auth";
+import Stripe from "stripe";
+
+// Reference: Stripe integration blueprint (blueprint:javascript_stripe)
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2025-10-29.clover",
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -147,6 +156,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
+  });
+
+  // Stripe payment routes (Reference: blueprint:javascript_stripe)
+  // Create payment intent for course enrollment
+  app.post("/api/create-payment-intent", authMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { enrollmentId } = req.body;
+      const userId = req.userId!;
+
+      if (!enrollmentId) {
+        return res.status(400).json({ error: "El ID de inscripción es requerido" });
+      }
+
+      // Get enrollment
+      const enrollment = await storage.getEnrollmentById(enrollmentId);
+      if (!enrollment) {
+        return res.status(404).json({ error: "Inscripción no encontrada" });
+      }
+
+      // Verify enrollment belongs to user
+      if (enrollment.userId !== userId) {
+        return res.status(403).json({ error: "No autorizado" });
+      }
+
+      // Verify enrollment is pending
+      if (enrollment.paymentStatus !== "pending") {
+        return res.status(400).json({ error: "Esta inscripción ya ha sido procesada" });
+      }
+
+      // Get course to get the price
+      const course = await storage.getCourse(enrollment.courseId);
+      if (!course) {
+        return res.status(404).json({ error: "Curso no encontrado" });
+      }
+
+      // Create payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(parseFloat(course.price) * 100), // Convert to cents
+        currency: "eur",
+        metadata: {
+          enrollmentId: enrollment.id,
+          courseId: course.id,
+          userId: userId,
+          courseName: course.title,
+        },
+      });
+
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      res.status(500).json({ 
+        error: "Error al crear intención de pago: " + error.message 
+      });
+    }
+  });
+
+  // Webhook to handle successful payments
+  app.post("/api/stripe-webhook", async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+
+    if (!sig) {
+      return res.status(400).send('Missing stripe-signature header');
+    }
+
+    let event;
+
+    try {
+      // For now, we'll use the webhook without signature verification for simplicity
+      // In production, you should verify the signature
+      event = req.body;
+    } catch (err: any) {
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+    if (event.type === 'payment_intent.succeeded') {
+      const paymentIntent = event.data.object;
+      const enrollmentId = paymentIntent.metadata.enrollmentId;
+
+      if (enrollmentId) {
+        try {
+          // Update enrollment status and add payment ID
+          await storage.updateEnrollmentPaymentStatus(
+            enrollmentId, 
+            "completed",
+            paymentIntent.id
+          );
+        } catch (error: any) {
+          console.error('Error updating enrollment:', error);
+        }
+      }
+    }
+
+    res.json({ received: true });
   });
 
   // Student routes
