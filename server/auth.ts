@@ -32,7 +32,7 @@ export function verifyToken(token: string): { userId: string } | null {
   }
 }
 
-export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
+export async function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -50,6 +50,25 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
   next();
 }
 
+export async function authMiddlewareWithUser(req: AuthRequest, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "No autorizado - Token no proporcionado" });
+  }
+
+  const token = authHeader.substring(7);
+  const decoded = verifyToken(token);
+
+  if (!decoded) {
+    return res.status(401).json({ error: "No autorizado - Token inválido o expirado" });
+  }
+
+  req.userId = decoded.userId;
+  // Will be hydrated in next middleware
+  next();
+}
+
 export function optionalAuthMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   
@@ -63,4 +82,26 @@ export function optionalAuthMiddleware(req: AuthRequest, res: Response, next: Ne
   }
 
   next();
+}
+
+export async function requireAdminMiddleware(storage: any) {
+  return async (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.userId) {
+      return res.status(401).json({ error: "No autorizado - Debes iniciar sesión" });
+    }
+
+    // Hydrate user
+    const user = await storage.getUser(req.userId);
+    if (!user) {
+      return res.status(401).json({ error: "Usuario no encontrado" });
+    }
+
+    req.user = user;
+
+    if (user.role !== "admin") {
+      return res.status(403).json({ error: "Acceso denegado - Se requieren permisos de administrador" });
+    }
+
+    next();
+  };
 }
