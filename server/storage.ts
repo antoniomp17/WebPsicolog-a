@@ -54,6 +54,7 @@ export interface IStorage {
   getUserEnrollments(userId: string): Promise<Enrollment[]>;
   getEnrollmentByCourseAndUser(userId: string, courseId: string): Promise<Enrollment | undefined>;
   getEnrollmentById(id: string): Promise<Enrollment | undefined>;
+  updateEnrollmentPaymentStatus(enrollmentId: string, paymentStatus: "pending" | "completed" | "refunded", stripePaymentId?: string): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -172,6 +173,19 @@ export class DbStorage implements IStorage {
   async getEnrollmentById(id: string): Promise<Enrollment | undefined> {
     const result = await db.select().from(enrollments).where(eq(enrollments.id, id)).limit(1);
     return result[0];
+  }
+
+  async updateEnrollmentPaymentStatus(
+    enrollmentId: string, 
+    paymentStatus: "pending" | "completed" | "refunded",
+    stripePaymentId?: string
+  ): Promise<void> {
+    await db.update(enrollments)
+      .set({ 
+        paymentStatus,
+        stripePaymentId: stripePaymentId || null,
+      })
+      .where(eq(enrollments.id, enrollmentId));
   }
 }
 
