@@ -16,7 +16,7 @@ export default function StudentArea() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: InsertStudent) => {
-      return await apiRequest("POST", "/api/students", data);
+      return await apiRequest<{ id: string; name: string; email: string; createdAt: Date }>("POST", "/api/students", data);
     },
     onSuccess: (data) => {
       setStudentName(data.name);

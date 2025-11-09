@@ -1,0 +1,379 @@
+Contexto
+Has desarrollado el frontend completo de PsicoBienestar en React. El sitio está funcionando visualmente perfecto en:
+https://00f2db73-ca72-4194-95ef-c20a85b3f49f-00-wrticylrv80g.janeway.replit.dev/
+
+Ahora necesitas desarrollar todo el backend para convertirlo en una aplicación completamente funcional y dinámica.
+
+Análisis del Frontend Actual
+El frontend que creaste incluye:
+
+Páginas Implementadas:
+Inicio (/) - Con hero, cursos destacados, testimonios, FAQs
+
+Sobre Mí (/sobre-mi) - Información del profesional
+
+Terapia (/terapia) - Información de servicios de terapia
+
+Cursos (/cursos) - Listado de 6 cursos (datos estáticos)
+
+Artículos (/articulos) - Listado de 3 artículos con modal de detalle
+
+Acceso Alumnos (/alumnos) - Formulario de registro
+
+Agendar Cita (/agendar) - Calendario con selector de fecha/hora
+
+Elementos que Necesitan Backend:
+Cursos mostrados actualmente (estáticos):
+
+Gestión de la Ansiedad - €120 - 6 semanas - Principiante
+
+Mindfulness y Bienestar - €80 - 4 semanas - Todos los niveles
+
+Comunicación Asertiva - €150 - 8 semanas - Intermedio
+
+Autoestima y Confianza - €110 - 5 semanas - Principiante
+
+Gestión Emocional - €130 - 7 semanas - Intermedio
+
+Resiliencia y Crecimiento - €95 - 6 semanas - Todos los niveles
+
+Artículos mostrados actualmente (estáticos):
+
+"5 Técnicas de Respiración para Reducir la Ansiedad" - 15 de Marzo, 2024 - Dra. María González
+
+"El Poder del Autocuidado en la Salud Mental" - 8 de Marzo, 2024 - Dra. María González
+
+"Mindfulness: Vivir en el Presente" - 1 de Marzo, 2024 - Dra. María González
+
+Funcionalidades que actualmente no funcionan:
+
+Botones "Inscribirse" en cursos
+
+Botón "Registrarse" en Acceso Alumnos
+
+Botón "Confirmar Cita" en el calendario
+
+Los artículos abren un modal pero con contenido estático
+
+Las FAQs funcionan (acordeón), pero el contenido es estático
+
+Objetivo
+Desarrollar el backend completo que permita:
+
+Autenticación de usuarios (registro, login, roles)
+
+Gestión dinámica de cursos desde base de datos
+
+Sistema de inscripciones y pagos
+
+Plataforma LMS para que alumnos accedan al contenido de sus cursos
+
+Sistema de reserva de citas funcional
+
+Blog dinámico con gestión de artículos
+
+Panel de administración para gestionar todo el contenido
+
+Sistema de emails automatizados
+
+Stack Tecnológico
+Backend: Node.js con Express
+
+Base de Datos: PostgreSQL (usar la integración de Replit)
+
+ORM: Prisma (recomendado) o Sequelize
+
+Autenticación: JWT + bcrypt
+
+Emails: Nodemailer
+
+Pagos: Stripe (integración básica inicialmente)
+
+Estructura de Base de Datos Requerida
+Esquema Prisma:
+text
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  fullName      String    @map("full_name")
+  role          Role      @default(STUDENT)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  
+  enrollments   Enrollment[]
+  appointments  Appointment[]
+  lessonProgress LessonProgress[]
+  certificates  Certificate[]
+  payments      Payment[]
+
+  @@map("users")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+  THERAPIST
+}
+
+model Course {
+  id                String    @id @default(uuid())
+  title             String
+  slug              String    @unique
+  description       String    @db.Text
+  shortDescription  String    @map("short_description") @db.Text
+  price             Decimal   @db.Decimal(10, 2)
+  durationWeeks     Int       @map("duration_weeks")
+  level             CourseLevel
+  imageUrl          String    @map("image_url")
+  isFeatured        Boolean   @default(false) @map("is_featured")
+  isPublished       Boolean   @default(true) @map("is_published")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  modules           CourseModule[]
+  enrollments       Enrollment[]
+  certificates      Certificate[]
+
+  @@map("courses")
+}
+
+enum CourseLevel {
+  PRINCIPIANTE
+  INTERMEDIO
+  AVANZADO
+  TODOS
+}
+
+model CourseModule {
+  id          String    @id @default(uuid())
+  courseId    String    @map("course_id")
+  title       String
+  description String    @db.Text
+  orderIndex  Int       @map("order_index")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     CourseLesson[]
+
+  @@map("course_modules")
+}
+
+model CourseLesson {
+  id              String    @id @default(uuid())
+  moduleId        String    @map("module_id")
+  title           String
+  content         String    @db.Text
+  videoUrl        String?   @map("video_url")
+  durationMinutes Int?      @map("duration_minutes")
+  orderIndex      Int       @map("order_index")
+  resources       Json?     // Array de {type, url, name}
+  createdAt       DateTime  @default(now()) @map("created_at")
+  
+  module          CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress        LessonProgress[]
+
+  @@map("course_lessons")
+}
+
+model Enrollment {
+  id                String    @id @default(uuid())
+  userId            String    @map("user_id")
+  courseId          String    @map("course_id")
+  enrolledAt        DateTime  @default(now()) @map("enrolled_at")
+  completedAt       DateTime? @map("completed_at")
+  progressPercentage Decimal  @default(0) @map("progress_percentage") @db.Decimal(5, 2)
+  paymentStatus     PaymentStatus @default(PENDING) @map("payment_status")
+  
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course            Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  REFUNDED
+}
+
+model LessonProgress {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  lessonId    String    @map("lesson_id")
+  completed   Boolean   @default(false)
+  completedAt DateTime? @map("completed_at")
+  
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      CourseLesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@map("lesson_progress")
+}
+
+model Article {
+  id          String    @id @default(uuid())
+  title       String
+  slug        String    @unique
+  excerpt     String    @db.Text
+  content     String    @db.Text
+  authorName  String    @map("author_name")
+  imageUrl    String    @map("image_url")
+  publishedAt DateTime  @map("published_at")
+  viewsCount  Int       @default(0) @map("views_count")
+  isPublished Boolean   @default(true) @map("is_published")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("articles")
+}
+
+model Appointment {
+  id              String    @id @default(uuid())
+  userId          String?   @map("user_id")
+  fullName        String    @map("full_name")
+  email           String
+  appointmentDate DateTime  @map("appointment_date") @db.Date
+  appointmentTime DateTime  @map("appointment_time") @db.Time
+  status          AppointmentStatus @default(PENDING)
+  notes           String?   @db.Text
+  videoCallLink   String?   @map("video_call_link")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  user            User?     @relation(fields: [userId], references: [id])
+
+  @@map("appointments")
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Payment {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  amount          Decimal   @db.Decimal(10, 2)
+  currency        String    @default("EUR")
+  paymentType     PaymentType @map("payment_type")
+  referenceId     String    @map("reference_id") // ID del curso o cita
+  stripePaymentId String?   @map("stripe_payment_id")
+  status          PaymentStatus @default(PENDING)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@map("payments")
+}
+
+enum PaymentType {
+  COURSE
+  APPOINTMENT
+}
+
+model Certificate {
+  id                String    @id @default(uuid())
+  userId            String    @map("user_id")
+  courseId          String    @map("course_id")
+  certificateNumber String    @unique @map("certificate_number")
+  issuedAt          DateTime  @default(now()) @map("issued_at")
+  certificateUrl    String?   @map("certificate_url")
+  
+  user              User      @relation(fields: [userId], references: [id])
+  course            Course    @relation(fields: [courseId], references: [id])
+
+  @@map("certificates")
+}
+APIs REST Necesarias
+Autenticación (/api/auth)
+text
+POST /api/auth/register - Registro de usuario
+POST /api/auth/login - Iniciar sesión
+POST /api/auth/logout - Cerrar sesión
+GET /api/auth/me - Usuario actual (requiere auth)
+POST /api/auth/forgot-password - Solicitar reset de contraseña
+POST /api/auth/reset-password - Resetear contraseña
+Cursos Públicos (/api/courses)
+text
+GET /api/courses - Listar cursos publicados
+GET /api/courses/featured - Cursos destacados (para la home)
+GET /api/courses/:slug - Detalle de un curso específico
+Área de Alumnos (/api/student) - Requiere autenticación
+text
+GET /api/student/courses - Mis cursos inscritos
+GET /api/student/courses/:id - Detalle de mi curso con módulos y lecciones
+GET /api/student/courses/:id/progress - Mi progreso en el curso
+POST /api/student/lessons/:id/complete - Marcar lección completada
+GET /api/student/certificates/:courseId - Obtener certificado
+Inscripciones (/api/enrollments)
+text
+POST /api/enrollments - Inscribirse a un curso (requiere auth)
+GET /api/enrollments/:id - Estado de inscripción
+POST /api/enrollments/:id/payment - Procesar pago
+Citas (/api/appointments)
+text
+GET /api/appointments/availability?date=YYYY-MM-DD - Horarios disponibles
+POST /api/appointments - Crear nueva cita
+GET /api/appointments/:id - Detalle de cita (requiere auth)
+PUT /api/appointments/:id - Modificar cita (requiere auth)
+DELETE /api/appointments/:id - Cancelar cita (requiere auth)
+GET /api/appointments/my-appointments - Mis citas (requiere auth)
+Artículos (/api/articles)
+text
+GET /api/articles - Listar artículos (paginado)
+GET /api/articles/:slug - Detalle de artículo
+POST /api/articles/:id/view - Incrementar contador de vistas
+Admin (/api/admin) - Requiere role ADMIN
+text
+# Cursos
+GET /api/admin/courses - Todos los cursos
+POST /api/admin/courses - Crear curso
+PUT /api/admin/courses/:id - Actualizar curso
+DELETE /api/admin/courses/:id - Eliminar curso
+POST /api/admin/courses/:id/modules - Crear módulo
+POST /api/admin/modules/:id/lessons - Crear lección
+
+# Artículos
+GET /api/admin/articles - Todos los artículos
+POST /api/admin/articles - Crear artículo
+PUT /api/admin/articles/:id - Actualizar artículo
+DELETE /api/admin/articles/:id - Eliminar artículo
+
+# Usuarios
+GET /api/admin/users - Listar usuarios
+GET /api/admin/users/:id - Detalle usuario
+PUT /api/admin/users/:id/role - Cambiar rol
+
+# Citas
+GET /api/admin/appointments - Todas las citas
+PUT /api/admin/appointments/:id/status - Actualizar estado
+
+# Dashboard
+GET /api/admin/stats - Estadísticas generales
+Seeds de Datos Iniciales
+Crea un archivo seed que pobla la base de datos con los datos actuales del frontend:
+
+javascript
+// seeds/seedData.js
+
+const courses = [
+  {
+    title: "Gestión de la Ansiedad",
+    slug: "gestion-ansiedad",
+    description: "Aprende técnicas prácticas para manejar la ansiedad y el estrés en tu día a día. Incluye ejercicios de respiración, mindfulness y herramientas cognitivo-conductuales.",
+    shortDescription: "Aprende técnicas prácticas 
