@@ -31,21 +31,42 @@ const CheckoutForm = ({ enrollmentId }: { enrollmentId: string }) => {
 
     setIsProcessing(true);
 
-    const { error } = await stripe.confirmPayment({
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/pago-exitoso?enrollmentId=${enrollmentId}`,
       },
+      redirect: "if_required",
     });
 
-    setIsProcessing(false);
-
     if (error) {
+      setIsProcessing(false);
       toast({
         title: "Error en el pago",
         description: error.message,
         variant: "destructive",
       });
+    } else if (paymentIntent && paymentIntent.status === "succeeded") {
+      // Confirm payment on backend to update enrollment status
+      try {
+        await apiRequest("POST", "/api/confirm-payment", {
+          paymentIntentId: paymentIntent.id,
+          enrollmentId,
+        });
+      } catch (err) {
+        console.error("Error confirming payment:", err);
+        // Continue anyway - webhook will handle it
+      }
+
+      toast({
+        title: "¡Pago exitoso!",
+        description: "Tu pago se ha procesado correctamente",
+      });
+      
+      // Invalidate enrollments cache before redirecting
+      await queryClient.invalidateQueries({ queryKey: ['/api/enrollments'] });
+      
+      setLocation(`/pago-exitoso?enrollmentId=${enrollmentId}`);
     }
   };
 
