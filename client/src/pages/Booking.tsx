@@ -164,7 +164,7 @@ export default function Booking() {
 
     const formData = new FormData(e.currentTarget as HTMLFormElement);
     const data: InsertAppointment = {
-      name: formData.get("book-name") as string,
+      fullName: formData.get("book-name") as string,
       email: formData.get("book-email") as string,
       date: selectedDate,
       time: selectedTime,
