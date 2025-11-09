@@ -1,10 +1,10 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import type { User } from "@shared/schema";
+import type { FrontendUser } from "@shared/schema";
 
 interface AuthContextType {
-  user: User | null;
+  user: FrontendUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   // Fetch current user if token exists
-  const { data: user = null, isLoading } = useQuery<User | null>({
+  const { data: user = null, isLoading } = useQuery<FrontendUser | null>({
     queryKey: ["/api/auth/me"],
     enabled: !!token,
     retry: false,

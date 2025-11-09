@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertStudentSchema, insertAppointmentSchema, registerUserSchema } from "@shared/schema";
+import { insertStudentSchema, insertAppointmentSchema, registerUserSchema, insertEnrollmentSchema } from "@shared/schema";
 import { hashPassword, verifyPassword, generateToken, authMiddleware, type AuthRequest } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -81,6 +81,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Return user without password, with name field for frontend
       const { passwordHash, fullName, ...userRest } = user;
       res.json({ ...userRest, name: fullName });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Enrollment routes
+  app.post("/api/enrollments", authMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { courseId } = req.body;
+      const userId = req.userId!;
+
+      if (!courseId) {
+        return res.status(400).json({ error: "El ID del curso es requerido" });
+      }
+
+      // Verify course exists
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ error: "Curso no encontrado" });
+      }
+
+      // Check if user is already enrolled
+      const existingEnrollment = await storage.getEnrollmentByCourseAndUser(userId, courseId);
+      if (existingEnrollment) {
+        return res.status(400).json({ error: "Ya estás inscrito en este curso" });
+      }
+
+      // Create enrollment with pending payment status
+      const enrollment = await storage.createEnrollment({
+        userId,
+        courseId,
+        paymentStatus: "pending",
+        progressPercentage: "0",
+      });
+
+      res.json(enrollment);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/enrollments", authMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId!;
+      const enrollments = await storage.getUserEnrollments(userId);
+      res.json(enrollments);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/courses/:courseId/enrollment", authMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId!;
+      const { courseId } = req.params;
+
+      const enrollment = await storage.getEnrollmentByCourseAndUser(userId, courseId);
+      
+      if (!enrollment) {
+        return res.status(404).json({ error: "No estás inscrito en este curso" });
+      }
+
+      res.json(enrollment);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

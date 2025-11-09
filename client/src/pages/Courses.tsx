@@ -1,41 +1,87 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { CheckCircle2, Clock, BarChart, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { CheckCircle2, Clock, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Course } from "@shared/schema";
+import { useAuth } from "@/contexts/AuthContext";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { Course, Enrollment } from "@shared/schema";
 
 export default function Courses() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
 
   // Fetch all courses from API
   const { data: courses = [], isLoading: isLoadingCourses } = useQuery<Course[]>({
     queryKey: ["/api/courses"],
   });
 
-  const handleEnroll = (course: Course) => {
-    setSelectedCourse(course);
-    setPaymentSuccess(false);
-  };
+  // Fetch user enrollments (only if authenticated)
+  const { data: enrollments = [] } = useQuery<Enrollment[]>({
+    queryKey: ["/api/enrollments"],
+    enabled: isAuthenticated,
+  });
 
-  const handlePayment = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPaymentSuccess(true);
-    
-    setTimeout(() => {
+  // Create enrollment mutation
+  const enrollMutation = useMutation({
+    mutationFn: async (courseId: string) => {
+      return await apiRequest("POST", "/api/enrollments", { courseId });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/enrollments"] });
       setSelectedCourse(null);
       toast({
-        title: "¡Inscripción completada!",
-        description: `Has sido inscrito exitosamente en ${selectedCourse?.title}. Recibirás un email con los detalles de acceso.`,
+        title: "¡Inscripción iniciada!",
+        description: "Tu inscripción está pendiente de pago. Redirigiendo al pago...",
       });
-    }, 2000);
+      // TODO: Redirect to payment page (Stripe) in Task 4
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error al inscribirse",
+        description: error.message || "Hubo un problema al procesar tu inscripción",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEnroll = (course: Course) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Inicia sesión para inscribirte",
+        description: "Debes tener una cuenta para inscribirte en cursos",
+      });
+      navigate("/login");
+      return;
+    }
+
+    // Check if already enrolled
+    const isEnrolled = enrollments.some((e) => e.courseId === course.id);
+    if (isEnrolled) {
+      toast({
+        title: "Ya estás inscrito",
+        description: "Ya estás inscrito en este curso. Ve al área de alumnos para acceder.",
+      });
+      return;
+    }
+
+    setSelectedCourse(course);
+  };
+
+  const handleConfirmEnrollment = () => {
+    if (selectedCourse) {
+      enrollMutation.mutate(selectedCourse.id);
+    }
+  };
+
+  const getCourseEnrollmentStatus = (courseId: string) => {
+    return enrollments.find((e) => e.courseId === courseId);
   };
 
   return (
@@ -90,99 +136,86 @@ export default function Courses() {
                 <span className="text-3xl font-bold text-dorado" data-testid={`text-course-price-${course.id}`}>
                   €{course.price}
                 </span>
-                <Button
-                  onClick={() => handleEnroll(course)}
-                  className="bg-dorado hover:bg-dorado/90 text-white"
-                  data-testid={`button-enroll-${course.id}`}
-                >
-                  Inscribirse
-                </Button>
+                {getCourseEnrollmentStatus(course.id) ? (
+                  <Button
+                    variant="outline"
+                    disabled
+                    data-testid={`button-enrolled-${course.id}`}
+                  >
+                    {getCourseEnrollmentStatus(course.id)?.paymentStatus === "completed" 
+                      ? "Inscrito" 
+                      : "Pendiente de Pago"}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handleEnroll(course)}
+                    className="bg-dorado hover:bg-dorado/90 text-white"
+                    data-testid={`button-enroll-${course.id}`}
+                  >
+                    Inscribirse
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           ))}
         </div>
       )}
 
-      {/* Payment Modal */}
+      {/* Enrollment Confirmation Dialog */}
       <Dialog open={!!selectedCourse} onOpenChange={() => setSelectedCourse(null)}>
-        <DialogContent className="sm:max-w-md" data-testid="dialog-payment">
+        <DialogContent className="sm:max-w-md" data-testid="dialog-enrollment">
           <DialogHeader>
             <DialogTitle className="text-2xl text-marron" data-testid="text-modal-title">
-              {paymentSuccess ? "¡Inscripción Exitosa!" : "Completar Inscripción"}
+              Confirmar Inscripción
             </DialogTitle>
+            <DialogDescription className="text-gris-medio">
+              Estás a punto de inscribirte en este curso
+            </DialogDescription>
           </DialogHeader>
 
-          {paymentSuccess ? (
-            <div className="text-center py-8 space-y-4" data-testid="payment-success">
-              <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto" />
-              <p className="text-lg text-marron font-semibold">
-                ¡Bienvenido a {selectedCourse?.title}!
+          <div className="space-y-4" data-testid="enrollment-confirmation">
+            <div>
+              <p className="text-sm text-gris-medio mb-2" data-testid="text-course-selected">
+                Curso: <span className="font-semibold text-marron">{selectedCourse?.title}</span>
               </p>
-              <p className="text-sm text-gris-medio">
-                Procesando tu inscripción...
+              <p className="text-sm text-gris-medio mb-2">
+                Duración: <span className="font-semibold text-marron">{selectedCourse?.durationWeeks} semanas</span>
+              </p>
+              <p className="text-2xl font-bold text-dorado mb-4" data-testid="text-price-selected">
+                €{selectedCourse?.price}
               </p>
             </div>
-          ) : (
-            <form onSubmit={handlePayment} className="space-y-4" data-testid="form-payment">
-              <div>
-                <p className="text-sm text-gris-medio mb-4" data-testid="text-course-selected">
-                  Curso: <span className="font-semibold text-marron">{selectedCourse?.title}</span>
-                </p>
-                <p className="text-2xl font-bold text-dorado mb-6" data-testid="text-price-selected">
-                  €{selectedCourse?.price}
-                </p>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="card-name">Nombre en la Tarjeta</Label>
-                <Input
-                  id="card-name"
-                  placeholder="Juan Pérez"
-                  required
-                  data-testid="input-card-name"
-                />
-              </div>
+            <p className="text-sm text-gris-medio">
+              Tu inscripción quedará pendiente hasta completar el pago. En el siguiente paso serás redirigido a la pasarela de pago segura.
+            </p>
 
-              <div className="space-y-2">
-                <Label htmlFor="card-number">Número de Tarjeta</Label>
-                <Input
-                  id="card-number"
-                  placeholder="1234 5678 9012 3456"
-                  required
-                  data-testid="input-card-number"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="card-expiry">Fecha de Vencimiento</Label>
-                  <Input
-                    id="card-expiry"
-                    placeholder="MM/YY"
-                    required
-                    data-testid="input-card-expiry"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="card-cvv">CVV</Label>
-                  <Input
-                    id="card-cvv"
-                    placeholder="123"
-                    required
-                    data-testid="input-card-cvv"
-                  />
-                </div>
-              </div>
-
+            <div className="flex gap-3">
               <Button
-                type="submit"
-                className="w-full bg-dorado hover:bg-dorado/90 text-white"
-                data-testid="button-submit-payment"
+                variant="outline"
+                onClick={() => setSelectedCourse(null)}
+                className="flex-1"
+                data-testid="button-cancel-enrollment"
               >
-                Confirmar Pago
+                Cancelar
               </Button>
-            </form>
-          )}
+              <Button
+                onClick={handleConfirmEnrollment}
+                disabled={enrollMutation.isPending}
+                className="flex-1 bg-dorado hover:bg-dorado/90 text-white"
+                data-testid="button-confirm-enrollment"
+              >
+                {enrollMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  "Confirmar Inscripción"
+                )}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -38,6 +38,9 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type RegisterUser = z.infer<typeof registerUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// Frontend user type (backend transforms fullName -> name)
+export type FrontendUser = Omit<User, "fullName" | "passwordHash"> & { name: string };
+
 // Students (keep for backwards compatibility with existing data)
 export const students = pgTable("students", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

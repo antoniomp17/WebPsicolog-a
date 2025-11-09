@@ -1,203 +1,182 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { BookOpen, User, Mail, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import type { InsertStudent } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { BookOpen, GraduationCap, CreditCard, Clock, CheckCircle2, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import type { Enrollment, Course } from "@shared/schema";
 
 export default function StudentArea() {
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [studentName, setStudentName] = useState("");
-  const { toast } = useToast();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const [, navigate] = useLocation();
 
-  const registerMutation = useMutation({
-    mutationFn: async (data: InsertStudent) => {
-      return await apiRequest<{ id: string; name: string; email: string; createdAt: Date }>("POST", "/api/students", data);
-    },
-    onSuccess: (data) => {
-      setStudentName(data.name);
-      setIsRegistered(true);
-      toast({
-        title: "¡Registro completado!",
-        description: "Tu perfil ha sido creado exitosamente. Pronto recibirás un email de confirmación.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error al registrar",
-        description: error.message || "Hubo un problema al crear tu perfil. Por favor, intenta de nuevo.",
-        variant: "destructive",
-      });
-    },
+  // Fetch user enrollments
+  const { data: enrollments = [], isLoading: isLoadingEnrollments } = useQuery<Enrollment[]>({
+    queryKey: ["/api/enrollments"],
+    enabled: isAuthenticated,
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const data: InsertStudent = {
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-    };
-    registerMutation.mutate(data);
-  };
+  // Fetch all courses to join with enrollments
+  const { data: allCourses = [], isLoading: isLoadingCourses } = useQuery<Course[]>({
+    queryKey: ["/api/courses"],
+  });
 
-  if (isRegistered) {
+  if (isAuthLoading || (isAuthenticated && (isLoadingEnrollments || isLoadingCourses))) {
     return (
-      <div className="animate-fade-in max-w-4xl mx-auto">
-        <Card className="shadow-lg border-card-border">
-          <CardHeader className="text-center">
-            <div className="w-20 h-20 rounded-full bg-dorado/10 mx-auto mb-4 flex items-center justify-center">
-              <User className="w-10 h-10 text-dorado" />
-            </div>
-            <CardTitle className="text-3xl text-marron mb-2" data-testid="text-welcome">
-              ¡Bienvenido, {studentName}!
-            </CardTitle>
-            <p className="text-gris-medio" data-testid="text-welcome-message">
-              Tu perfil ha sido registrado exitosamente
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="bg-secondary p-6 rounded-lg">
-              <h3 className="font-semibold text-marron mb-2">Próximos Pasos</h3>
-              <ul className="space-y-2 text-sm text-gris-medio">
-                <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-dorado mt-2 flex-shrink-0"></div>
-                  <span>Revisa tu email para confirmar tu cuenta</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-dorado mt-2 flex-shrink-0"></div>
-                  <span>Explora los cursos disponibles y selecciona el que más te interese</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-dorado mt-2 flex-shrink-0"></div>
-                  <span>Una vez inscrito, recibirás acceso a la plataforma de aprendizaje</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <Card className="border-card-border">
-                <CardContent className="p-6">
-                  <BookOpen className="w-8 h-8 text-dorado mb-3" />
-                  <h4 className="font-semibold text-marron mb-2">Mis Cursos</h4>
-                  <p className="text-sm text-gris-medio mb-4">
-                    Aún no estás inscrito en ningún curso. Explora nuestro catálogo.
-                  </p>
-                  <Button variant="secondary" className="w-full" data-testid="button-view-courses">
-                    Ver Cursos
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="border-card-border">
-                <CardContent className="p-6">
-                  <Mail className="w-8 h-8 text-dorado mb-3" />
-                  <h4 className="font-semibold text-marron mb-2">Soporte</h4>
-                  <p className="text-sm text-gris-medio mb-4">
-                    ¿Necesitas ayuda? Estamos aquí para ti.
-                  </p>
-                  <Button variant="secondary" className="w-full" data-testid="button-contact">
-                    Contactar
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-dorado" />
       </div>
     );
   }
 
+  if (!isAuthenticated) {
+    return (
+      <div className="animate-fade-in max-w-2xl mx-auto text-center py-12">
+        <div className="w-20 h-20 rounded-full bg-dorado/10 mx-auto mb-6 flex items-center justify-center">
+          <GraduationCap className="w-10 h-10 text-dorado" />
+        </div>
+        <h1 className="text-4xl font-bold text-marron mb-4" data-testid="text-login-required">
+          Acceso Restringido
+        </h1>
+        <p className="text-lg text-gris-medio mb-8" data-testid="text-login-message">
+          Debes iniciar sesión para acceder al área de alumnos
+        </p>
+        <div className="flex gap-4 justify-center">
+          <Button
+            onClick={() => navigate("/login")}
+            className="bg-dorado hover:bg-dorado/90 text-white"
+            data-testid="button-login"
+          >
+            Iniciar Sesión
+          </Button>
+          <Button
+            onClick={() => navigate("/registro")}
+            variant="outline"
+            data-testid="button-register"
+          >
+            Crear Cuenta
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Get enrolled courses with full course data
+  const enrolledCourses = enrollments
+    .map((enrollment) => {
+      const course = allCourses.find((c) => c.id === enrollment.courseId);
+      return course ? { enrollment, course } : null;
+    })
+    .filter((item): item is { enrollment: Enrollment; course: Course } => item !== null);
+
+  const getPaymentStatusBadge = (status: string) => {
+    switch (status) {
+      case "completed":
+        return <Badge className="bg-green-500 hover:bg-green-600 text-white"><CheckCircle2 className="w-3 h-3 mr-1" /> Pagado</Badge>;
+      case "pending":
+        return <Badge variant="outline" className="border-amber-500 text-amber-600"><Clock className="w-3 h-3 mr-1" /> Pendiente de Pago</Badge>;
+      case "refunded":
+        return <Badge variant="destructive">Reembolsado</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <section className="text-center mb-16">
+      <section className="mb-12">
         <h1 className="text-4xl md:text-5xl font-bold text-marron mb-4" data-testid="text-student-area-title">
-          Área de Alumnos
+          Mi Área de Aprendizaje
         </h1>
-        <p className="text-lg text-gris-medio max-w-3xl mx-auto" data-testid="text-student-area-subtitle">
-          Regístrate para acceder a tus cursos y recursos exclusivos
+        <p className="text-lg text-gris-medio" data-testid="text-welcome">
+          Bienvenido, {user?.name}
         </p>
       </section>
 
-      {/* Registration Form */}
-      <div className="max-w-md mx-auto">
-        <Card className="shadow-lg border-card-border">
-          <CardHeader>
-            <CardTitle className="text-2xl text-marron text-center" data-testid="text-register-title">
-              Crear Perfil de Alumno
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4" data-testid="form-student-register">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nombre Completo</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="Juan Pérez"
-                  required
-                  data-testid="input-name"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Correo Electrónico</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="juan@ejemplo.com"
-                  required
-                  data-testid="input-email"
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-dorado hover:bg-dorado/90 text-white"
-                disabled={registerMutation.isPending}
-                data-testid="button-register"
-              >
-                {registerMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Registrando...
-                  </>
-                ) : (
-                  "Registrarse"
-                )}
-              </Button>
-            </form>
-
-            <div className="mt-6 p-4 bg-secondary rounded-lg">
-              <h4 className="font-semibold text-marron text-sm mb-2">Beneficios de Registrarte</h4>
-              <ul className="space-y-2 text-sm text-gris-medio">
-                <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-dorado mt-2 flex-shrink-0"></div>
-                  <span>Acceso a todos tus cursos en un solo lugar</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-dorado mt-2 flex-shrink-0"></div>
-                  <span>Material descargable y recursos exclusivos</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-dorado mt-2 flex-shrink-0"></div>
-                  <span>Seguimiento de tu progreso</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-dorado mt-2 flex-shrink-0"></div>
-                  <span>Certificados al completar los cursos</span>
-                </li>
-              </ul>
-            </div>
+      {/* Enrollments Section */}
+      {enrolledCourses.length === 0 ? (
+        <Card className="shadow-lg border-card-border" data-testid="card-no-enrollments">
+          <CardContent className="p-12 text-center">
+            <BookOpen className="w-16 h-16 text-gris-claro mx-auto mb-4" />
+            <h3 className="text-2xl font-semibold text-marron mb-2">
+              Aún no tienes cursos
+            </h3>
+            <p className="text-gris-medio mb-6">
+              Explora nuestro catálogo de cursos y comienza tu viaje de aprendizaje
+            </p>
+            <Button
+              onClick={() => navigate("/cursos")}
+              className="bg-dorado hover:bg-dorado/90 text-white"
+              data-testid="button-view-courses"
+            >
+              Ver Cursos Disponibles
+            </Button>
           </CardContent>
         </Card>
-      </div>
+      ) : (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-semibold text-marron" data-testid="text-my-courses">
+            Mis Cursos ({enrolledCourses.length})
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {enrolledCourses.map(({ enrollment, course }) => (
+              <Card
+                key={enrollment.id}
+                className="overflow-hidden transition-transform duration-300 hover:scale-[1.02] shadow-lg border-card-border flex flex-col"
+                data-testid={`card-enrollment-${enrollment.id}`}
+              >
+                <img
+                  src={course.imageUrl}
+                  alt={course.title}
+                  className="w-full h-48 object-cover"
+                  data-testid={`img-course-${course.id}`}
+                />
+                <CardHeader className="flex-grow">
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {getPaymentStatusBadge(enrollment.paymentStatus)}
+                  </div>
+                  <h3 className="text-xl font-semibold text-marron mb-2" data-testid={`text-course-title-${course.id}`}>
+                    {course.title}
+                  </h3>
+                  <p className="text-sm text-gris-medio mb-4" data-testid={`text-course-description-${course.id}`}>
+                    {course.shortDescription}
+                  </p>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-gris-medio">
+                      <span>Progreso</span>
+                      <span>{enrollment.progressPercentage}%</span>
+                    </div>
+                    <Progress value={parseFloat(enrollment.progressPercentage || "0")} className="h-2" />
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {enrollment.paymentStatus === "completed" ? (
+                    <Button
+                      className="w-full bg-dorado hover:bg-dorado/90 text-white"
+                      data-testid={`button-access-course-${course.id}`}
+                    >
+                      Acceder al Curso
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="w-full border-amber-500 text-amber-600 hover:bg-amber-50"
+                      data-testid={`button-complete-payment-${course.id}`}
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Completar Pago
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

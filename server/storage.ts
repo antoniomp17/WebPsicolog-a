@@ -8,11 +8,14 @@ import {
   type Article,
   type User,
   type InsertUser,
+  type Enrollment,
+  type InsertEnrollment,
   students,
   appointments,
   courses,
   articles,
   users,
+  enrollments,
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
@@ -45,6 +48,12 @@ export interface IStorage {
   getAllArticles(): Promise<Article[]>;
   getArticle(id: string): Promise<Article | undefined>;
   getArticleBySlug(slug: string): Promise<Article | undefined>;
+
+  // Enrollments
+  createEnrollment(enrollment: InsertEnrollment): Promise<Enrollment>;
+  getUserEnrollments(userId: string): Promise<Enrollment[]>;
+  getEnrollmentByCourseAndUser(userId: string, courseId: string): Promise<Enrollment | undefined>;
+  getEnrollmentById(id: string): Promise<Enrollment | undefined>;
 }
 
 export class DbStorage implements IStorage {
@@ -140,6 +149,28 @@ export class DbStorage implements IStorage {
 
   async getArticleBySlug(slug: string): Promise<Article | undefined> {
     const result = await db.select().from(articles).where(eq(articles.slug, slug)).limit(1);
+    return result[0];
+  }
+
+  // Enrollments
+  async createEnrollment(insertEnrollment: InsertEnrollment): Promise<Enrollment> {
+    const result = await db.insert(enrollments).values(insertEnrollment).returning();
+    return result[0];
+  }
+
+  async getUserEnrollments(userId: string): Promise<Enrollment[]> {
+    return await db.select().from(enrollments).where(eq(enrollments.userId, userId));
+  }
+
+  async getEnrollmentByCourseAndUser(userId: string, courseId: string): Promise<Enrollment | undefined> {
+    const result = await db.select().from(enrollments).where(
+      and(eq(enrollments.userId, userId), eq(enrollments.courseId, courseId))
+    ).limit(1);
+    return result[0];
+  }
+
+  async getEnrollmentById(id: string): Promise<Enrollment | undefined> {
+    const result = await db.select().from(enrollments).where(eq(enrollments.id, id)).limit(1);
     return result[0];
   }
 }
