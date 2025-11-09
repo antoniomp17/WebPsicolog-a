@@ -8,7 +8,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role?: "user" | "admin") => Promise<void>;
+  register: (name: string, email: string, password: string, role?: "student" | "admin" | "therapist") => Promise<void>;
   logout: () => void;
   token: string | null;
 }
@@ -57,12 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name, 
       email, 
       password,
-      role = "user" as "user" | "admin"
+      role = "student" as "student" | "admin" | "therapist"
     }: { 
       name: string; 
       email: string; 
       password: string;
-      role?: "user" | "admin";
+      role?: "student" | "admin" | "therapist";
     }) => {
       const response = await apiRequest("POST", "/api/auth/register", { name, email, password, role });
       return response;
@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await loginMutation.mutateAsync({ email, password });
   };
 
-  const register = async (name: string, email: string, password: string, role: "user" | "admin" = "user") => {
+  const register = async (name: string, email: string, password: string, role: "student" | "admin" | "therapist" = "student") => {
     await registerMutation.mutateAsync({ name, email, password, role });
   };
 

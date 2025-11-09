@@ -1,14 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertStudentSchema, insertAppointmentSchema, insertUserSchema } from "@shared/schema";
+import { insertStudentSchema, insertAppointmentSchema, registerUserSchema } from "@shared/schema";
 import { hashPassword, verifyPassword, generateToken, authMiddleware, type AuthRequest } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const validatedData = insertUserSchema.parse(req.body);
+      const validatedData = registerUserSchema.parse(req.body);
 
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(validatedData.email);
@@ -21,18 +21,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password
       const hashedPassword = await hashPassword(validatedData.password);
 
-      // Create user
+      // Create user with transformed data
       const user = await storage.createUser({
-        ...validatedData,
-        password: hashedPassword,
+        email: validatedData.email,
+        passwordHash: hashedPassword,
+        fullName: validatedData.name,
+        role: validatedData.role || "student",
       });
 
       // Generate token
       const token = generateToken(user.id);
 
-      // Return user without password
-      const { password, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword, token });
+      // Return user without password, with name field for frontend
+      const { passwordHash: _, fullName, ...userRest } = user;
+      res.json({ user: { ...userRest, name: fullName }, token });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
@@ -53,7 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify password
-      const isValidPassword = await verifyPassword(password, user.password);
+      const isValidPassword = await verifyPassword(password, user.passwordHash);
       if (!isValidPassword) {
         return res.status(401).json({ error: "Email o contraseña incorrectos" });
       }
@@ -61,9 +63,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate token
       const token = generateToken(user.id);
 
-      // Return user without password
-      const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword, token });
+      // Return user without password, with name field for frontend
+      const { passwordHash: _, fullName, ...userRest } = user;
+      res.json({ user: { ...userRest, name: fullName }, token });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -76,8 +78,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Usuario no encontrado" });
       }
 
-      const { password, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
+      // Return user without password, with name field for frontend
+      const { passwordHash, fullName, ...userRest } = user;
+      res.json({ ...userRest, name: fullName });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
