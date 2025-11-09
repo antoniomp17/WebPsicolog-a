@@ -211,6 +211,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Confirm payment and update enrollment status
+  app.post("/api/confirm-payment", authMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { paymentIntentId, enrollmentId } = req.body;
+      const userId = req.userId!;
+
+      if (!paymentIntentId || !enrollmentId) {
+        return res.status(400).json({ 
+          error: "Payment Intent ID y Enrollment ID son requeridos" 
+        });
+      }
+
+      // Get enrollment and verify it belongs to user
+      const enrollment = await storage.getEnrollmentById(enrollmentId);
+      if (!enrollment) {
+        return res.status(404).json({ error: "Inscripción no encontrada" });
+      }
+
+      if (enrollment.userId !== userId) {
+        return res.status(403).json({ error: "No autorizado" });
+      }
+
+      // Verify payment intent with Stripe
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (paymentIntent.status !== "succeeded") {
+        return res.status(400).json({ 
+          error: "El pago no se ha completado exitosamente" 
+        });
+      }
+
+      // Update enrollment status
+      await storage.updateEnrollmentPaymentStatus(
+        enrollmentId,
+        "completed",
+        paymentIntentId
+      );
+
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ 
+        error: "Error al confirmar el pago: " + error.message 
+      });
+    }
+  });
+
   // Webhook to handle successful payments
   app.post("/api/stripe-webhook", async (req, res) => {
     const sig = req.headers['stripe-signature'];
