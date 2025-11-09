@@ -1,10 +1,17 @@
+import { db } from "./db";
 import {
   type Student,
   type InsertStudent,
   type Appointment,
   type InsertAppointment,
+  type Course,
+  type Article,
+  students,
+  appointments,
+  courses,
+  articles,
 } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // Students
@@ -18,68 +25,94 @@ export interface IStorage {
   getAppointmentsByDate(date: string): Promise<Appointment[]>;
   getAllAppointments(): Promise<Appointment[]>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
+
+  // Courses
+  getAllCourses(): Promise<Course[]>;
+  getCourse(id: string): Promise<Course | undefined>;
+  getCourseBySlug(slug: string): Promise<Course | undefined>;
+  getFeaturedCourses(): Promise<Course[]>;
+
+  // Articles
+  getAllArticles(): Promise<Article[]>;
+  getArticle(id: string): Promise<Article | undefined>;
+  getArticleBySlug(slug: string): Promise<Article | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private students: Map<string, Student>;
-  private appointments: Map<string, Appointment>;
-
-  constructor() {
-    this.students = new Map();
-    this.appointments = new Map();
-  }
-
+export class DbStorage implements IStorage {
   // Students
   async getStudent(id: string): Promise<Student | undefined> {
-    return this.students.get(id);
+    const result = await db.select().from(students).where(eq(students.id, id)).limit(1);
+    return result[0];
   }
 
   async getStudentByEmail(email: string): Promise<Student | undefined> {
-    return Array.from(this.students.values()).find(
-      (student) => student.email === email
-    );
+    const result = await db.select().from(students).where(eq(students.email, email)).limit(1);
+    return result[0];
   }
 
   async createStudent(insertStudent: InsertStudent): Promise<Student> {
-    const id = randomUUID();
-    const student: Student = {
-      ...insertStudent,
-      id,
-      createdAt: new Date(),
-    };
-    this.students.set(id, student);
-    return student;
+    const result = await db.insert(students).values(insertStudent).returning();
+    return result[0];
   }
 
   async getAllStudents(): Promise<Student[]> {
-    return Array.from(this.students.values());
+    return await db.select().from(students);
   }
 
   // Appointments
   async getAppointment(id: string): Promise<Appointment | undefined> {
-    return this.appointments.get(id);
+    const result = await db.select().from(appointments).where(eq(appointments.id, id)).limit(1);
+    return result[0];
   }
 
   async getAppointmentsByDate(date: string): Promise<Appointment[]> {
-    return Array.from(this.appointments.values()).filter(
-      (appointment) => appointment.date === date
-    );
+    return await db.select().from(appointments).where(eq(appointments.date, date));
   }
 
   async getAllAppointments(): Promise<Appointment[]> {
-    return Array.from(this.appointments.values());
+    return await db.select().from(appointments);
   }
 
   async createAppointment(insertAppointment: InsertAppointment): Promise<Appointment> {
-    const id = randomUUID();
-    const appointment: Appointment = {
-      ...insertAppointment,
-      id,
-      createdAt: new Date(),
-    };
-    this.appointments.set(id, appointment);
-    return appointment;
+    const result = await db.insert(appointments).values(insertAppointment).returning();
+    return result[0];
+  }
+
+  // Courses
+  async getAllCourses(): Promise<Course[]> {
+    return await db.select().from(courses).where(eq(courses.isPublished, true));
+  }
+
+  async getCourse(id: string): Promise<Course | undefined> {
+    const result = await db.select().from(courses).where(eq(courses.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getCourseBySlug(slug: string): Promise<Course | undefined> {
+    const result = await db.select().from(courses).where(eq(courses.slug, slug)).limit(1);
+    return result[0];
+  }
+
+  async getFeaturedCourses(): Promise<Course[]> {
+    return await db.select().from(courses).where(
+      and(eq(courses.isPublished, true), eq(courses.isFeatured, true))
+    );
+  }
+
+  // Articles
+  async getAllArticles(): Promise<Article[]> {
+    return await db.select().from(articles).where(eq(articles.isPublished, true));
+  }
+
+  async getArticle(id: string): Promise<Article | undefined> {
+    const result = await db.select().from(articles).where(eq(articles.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getArticleBySlug(slug: string): Promise<Article | undefined> {
+    const result = await db.select().from(articles).where(eq(articles.slug, slug)).limit(1);
+    return result[0];
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DbStorage();

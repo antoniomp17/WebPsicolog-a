@@ -1,12 +1,25 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, User } from "lucide-react";
-import { articles } from "@/lib/data";
+import { Calendar, User, Loader2 } from "lucide-react";
+import type { Article } from "@shared/schema";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 export default function Blog() {
-  const [selectedArticle, setSelectedArticle] = useState<typeof articles[0] | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+
+  // Fetch all articles from API
+  const { data: articles = [], isLoading: isLoadingArticles } = useQuery<Article[]>({
+    queryKey: ["/api/articles"],
+  });
+
+  const formatDate = (dateString: string | Date) => {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    return format(date, "d 'de' MMMM, yyyy", { locale: es });
+  };
 
   return (
     <div className="animate-fade-in">
@@ -21,52 +34,58 @@ export default function Blog() {
       </section>
 
       {/* Articles Grid */}
-      <div className="space-y-8 max-w-4xl mx-auto">
-        {articles.map((article) => (
-          <Card
-            key={article.id}
-            className="overflow-hidden shadow-lg border-card-border hover-elevate transition-all"
-            data-testid={`card-article-${article.id}`}
-          >
-            <div className="md:flex">
-              <img
-                src={article.image}
-                alt={article.title}
-                className="w-full md:w-64 h-48 object-cover"
-                data-testid={`img-article-${article.id}`}
-              />
-              <div className="flex-1">
-                <CardHeader>
-                  <div className="flex flex-wrap gap-4 text-sm text-gris-medio mb-3">
-                    <span className="flex items-center gap-1" data-testid={`text-article-date-${article.id}`}>
-                      <Calendar className="w-4 h-4" />
-                      {article.date}
-                    </span>
-                    <span className="flex items-center gap-1" data-testid={`text-article-author-${article.id}`}>
-                      <User className="w-4 h-4" />
-                      {article.author}
-                    </span>
-                  </div>
-                  <h2 className="text-2xl font-bold text-marron mb-3" data-testid={`text-article-title-${article.id}`}>
-                    {article.title}
-                  </h2>
-                  <p className="text-gris-medio mb-4" data-testid={`text-article-excerpt-${article.id}`}>
-                    {article.excerpt}
-                  </p>
-                  <Button
-                    onClick={() => setSelectedArticle(article)}
-                    variant="secondary"
-                    className="hover-elevate active-elevate-2"
-                    data-testid={`button-read-${article.id}`}
-                  >
-                    Leer más
-                  </Button>
-                </CardHeader>
+      {isLoadingArticles ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-dorado" />
+        </div>
+      ) : (
+        <div className="space-y-8 max-w-4xl mx-auto">
+          {articles.map((article) => (
+            <Card
+              key={article.id}
+              className="overflow-hidden shadow-lg border-card-border hover-elevate transition-all"
+              data-testid={`card-article-${article.id}`}
+            >
+              <div className="md:flex">
+                <img
+                  src={article.imageUrl}
+                  alt={article.title}
+                  className="w-full md:w-64 h-48 object-cover"
+                  data-testid={`img-article-${article.id}`}
+                />
+                <div className="flex-1">
+                  <CardHeader>
+                    <div className="flex flex-wrap gap-4 text-sm text-gris-medio mb-3">
+                      <span className="flex items-center gap-1" data-testid={`text-article-date-${article.id}`}>
+                        <Calendar className="w-4 h-4" />
+                        {formatDate(article.publishedAt)}
+                      </span>
+                      <span className="flex items-center gap-1" data-testid={`text-article-author-${article.id}`}>
+                        <User className="w-4 h-4" />
+                        {article.authorName}
+                      </span>
+                    </div>
+                    <h2 className="text-2xl font-bold text-marron mb-3" data-testid={`text-article-title-${article.id}`}>
+                      {article.title}
+                    </h2>
+                    <p className="text-gris-medio mb-4" data-testid={`text-article-excerpt-${article.id}`}>
+                      {article.excerpt}
+                    </p>
+                    <Button
+                      onClick={() => setSelectedArticle(article)}
+                      variant="secondary"
+                      className="hover-elevate active-elevate-2"
+                      data-testid={`button-read-${article.id}`}
+                    >
+                      Leer más
+                    </Button>
+                  </CardHeader>
+                </div>
               </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Article Modal */}
       <Dialog open={!!selectedArticle} onOpenChange={() => setSelectedArticle(null)}>
@@ -75,11 +94,11 @@ export default function Blog() {
             <div className="flex flex-wrap gap-4 text-sm text-gris-medio mb-3">
               <span className="flex items-center gap-1" data-testid="text-modal-article-date">
                 <Calendar className="w-4 h-4" />
-                {selectedArticle?.date}
+                {selectedArticle && formatDate(selectedArticle.publishedAt)}
               </span>
               <span className="flex items-center gap-1" data-testid="text-modal-article-author">
                 <User className="w-4 h-4" />
-                {selectedArticle?.author}
+                {selectedArticle?.authorName}
               </span>
             </div>
             <DialogTitle className="text-3xl text-marron mb-4" data-testid="text-modal-article-title">
@@ -90,7 +109,7 @@ export default function Blog() {
           {selectedArticle && (
             <div className="space-y-4">
               <img
-                src={selectedArticle.image}
+                src={selectedArticle.imageUrl}
                 alt={selectedArticle.title}
                 className="w-full h-64 object-cover rounded-lg"
                 data-testid="img-modal-article"
