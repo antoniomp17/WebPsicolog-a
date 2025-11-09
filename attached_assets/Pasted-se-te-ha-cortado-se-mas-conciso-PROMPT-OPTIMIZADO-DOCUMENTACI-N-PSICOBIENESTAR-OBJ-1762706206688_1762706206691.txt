@@ -1,0 +1,354 @@
+se te ha cortado, se mas conciso
+
+# 📚 PROMPT OPTIMIZADO - DOCUMENTACIÓN PSICOBIENESTAR
+
+***
+
+## OBJETIVO
+
+Genera una **documentación técnica completa** del proyecto **PsicoBienestar** en la carpeta `/docs` con los siguientes archivos:
+
+***
+
+## 📁 ARCHIVOS A CREAR
+
+### **1. /docs/README.md** - Visión General (300-400 líneas)
+
+**Contenido:**
+- Descripción del proyecto y características principales
+- Stack tecnológico (Frontend: React+TS+Vite+Shadcn, Backend: Node+Express+Prisma+PostgreSQL)
+- Estructura de carpetas completa con explicación de cada directorio
+- Comandos de instalación y ejecución
+- Variables de entorno necesarias
+- Enlaces a otros documentos de la carpeta /docs
+
+***
+
+### **2. /docs/ARCHITECTURE.md** - Arquitectura (200-250 líneas)
+
+**Contenido:**
+- Diagrama de arquitectura en formato Mermaid
+- Descripción de las 3 capas: Presentación (React), Lógica (Express), Datos (Prisma+PostgreSQL)
+- Flujo de autenticación JWT con diagrama de secuencia
+- Patrones de diseño utilizados (MVC, Repository, Context API, Custom Hooks)
+- Medidas de seguridad implementadas
+- Estrategias de performance y caché
+
+***
+
+### **3. /docs/DATABASE.md** - Base de Datos (150-200 líneas)
+
+**Contenido:**
+- Diagrama ERD en formato Mermaid mostrando relaciones entre tablas
+- Lista de modelos principales con sus campos clave:
+  - User (id, email, passwordHash, fullName, role)
+  - Course (id, title, slug, price, level, isPublished)
+  - Enrollment (userId, courseId, progressPercentage, paymentStatus)
+  - Appointment (userId, appointmentDate, appointmentTime, status)
+  - Article (title, slug, content, publishedAt)
+- Índices importantes
+- Reglas de cascade delete
+- Cómo ejecutar migraciones: `npx prisma migrate dev`
+
+***
+
+### **4. /docs/API.md** - Documentación de APIs (400-500 líneas)
+
+**Contenido organizado por secciones:**
+
+#### **Autenticación**
+```
+POST /api/auth/register
+POST /api/auth/login  
+GET /api/auth/me (requiere token)
+```
+
+#### **Cursos Públicos**
+```
+GET /api/courses
+GET /api/courses/featured
+GET /api/courses/:slug
+```
+
+#### **Área de Estudiante (requiere auth)**
+```
+GET /api/student/courses
+GET /api/student/courses/:id/progress
+POST /api/student/lessons/:id/complete
+GET /api/student/certificates/:courseId
+```
+
+#### **Inscripciones (requiere auth)**
+```
+POST /api/enrollments
+POST /api/enrollments/:id/payment
+```
+
+#### **Citas**
+```
+GET /api/appointments/availability?date=YYYY-MM-DD
+POST /api/appointments (requiere auth)
+GET /api/appointments/my-appointments (requiere auth)
+```
+
+#### **Artículos**
+```
+GET /api/articles
+GET /api/articles/:slug
+```
+
+#### **Admin (requiere role ADMIN)**
+```
+POST /api/admin/courses
+PUT /api/admin/courses/:id
+DELETE /api/admin/courses/:id
+GET /api/admin/users
+GET /api/admin/stats
+```
+
+**Para cada endpoint incluir:**
+- Método HTTP y URL
+- Headers necesarios (Authorization: Bearer token)
+- Body de ejemplo (request)
+- Respuesta de ejemplo (success y error)
+- Códigos de estado HTTP
+
+***
+
+### **5. /docs/ADMIN_MANUAL.md** - Manual del Administrador (200-250 líneas)
+
+**Contenido:**
+
+#### **Inicio de Sesión**
+- URL: `/login`
+- Usar credenciales de admin creadas en seed
+
+#### **Panel de Administración** (`/admin`)
+
+**Gestión de Cursos:**
+- Cómo crear un curso nuevo (título, slug, descripción, precio, nivel, imagen)
+- Cómo agregar módulos a un curso
+- Cómo agregar lecciones a un módulo (contenido, video, recursos)
+- Cómo publicar/despublicar cursos
+- Cómo marcar curso como destacado
+
+**Gestión de Artículos:**
+- Crear artículo (título, slug, excerpt, contenido completo, imagen)
+- Editar artículo existente
+- Publicar/despublicar artículos
+
+**Gestión de Usuarios:**
+- Ver lista de usuarios registrados
+- Cambiar rol de usuario (STUDENT → ADMIN)
+- Ver inscripciones de cada usuario
+
+**Gestión de Citas:**
+- Ver todas las citas agendadas
+- Cambiar estado: PENDING → CONFIRMED → COMPLETED
+- Cancelar citas
+
+**Estadísticas:**
+- Total de usuarios
+- Total de inscripciones
+- Ingresos totales
+- Cursos más populares
+
+***
+
+### **6. /docs/USER_MANUAL.md** - Manual del Usuario (150-200 líneas)
+
+**Para Estudiantes:**
+
+#### **Registro y Login**
+- Ir a `/registro`
+- Completar formulario (nombre, email, contraseña)
+- Recibirás email de bienvenida
+- Inicia sesión en `/login`
+
+#### **Explorar Cursos**
+- Ver catálogo en `/cursos`
+- Click en curso para ver detalle completo
+- Ver temario (módulos y lecciones)
+
+#### **Inscribirse a un Curso**
+- Click en "Inscribirse"
+- Proceder al checkout
+- Ingresar datos de tarjeta
+- Confirmar pago
+
+#### **Acceder a Mis Cursos**
+- Ir a `/alumnos` (área de estudiante)
+- Ver lista de cursos inscritos
+- Click en curso para acceder al contenido
+
+#### **Tomar un Curso**
+- Ver lecciones en orden
+- Marcar lección como completada
+- Descargar recursos (PDFs, material adicional)
+- Ver progreso en porcentaje
+
+#### **Obtener Certificado**
+- Al completar 100% del curso
+- Descargar certificado en PDF
+- Compartir en LinkedIn
+
+#### **Agendar Cita de Terapia**
+- Ir a `/agendar`
+- Seleccionar fecha en calendario
+- Elegir horario disponible
+- Completar formulario con datos
+- Confirmar cita
+- Recibirás email con link de videollamada
+
+***
+
+### **7. /docs/SETUP.md** - Setup para Desarrolladores (100-150 líneas)
+
+**Contenido:**
+
+#### **Requisitos**
+- Node.js 18+
+- PostgreSQL 14+
+- npm o pnpm
+
+#### **Instalación**
+```bash
+# Clonar repositorio
+git clone [url]
+
+# Instalar dependencias
+npm install
+
+# Configurar .env
+DATABASE_URL="postgresql://..."
+JWT_SECRET="..."
+STRIPE_SECRET_KEY="..."
+SMTP_HOST="smtp.gmail.com"
+SMTP_USER="..."
+SMTP_PASS="..."
+
+# Ejecutar migraciones
+npx prisma migrate dev
+
+# Poblar base de datos
+npm run seed
+
+# Iniciar desarrollo
+npm run dev
+```
+
+#### **Scripts Disponibles**
+- `npm run dev` - Desarrollo
+- `npm run build` - Compilar producción
+- `npm run preview` - Preview producción
+- `npm run seed` - Poblar datos de ejemplo
+- `npx prisma studio` - Ver base de datos visual
+
+#### **Testing**
+```bash
+# Ejecutar tests
+npm run test
+
+# Tests con coverage
+npm run test:coverage
+```
+
+***
+
+### **8. /docs/DEPLOYMENT.md** - Guía de Despliegue (80-100 líneas)
+
+**Contenido:**
+
+#### **Despliegue en Replit**
+- Variables de entorno en Secrets
+- Configurar PostgreSQL
+- Deploy automático al hacer push
+
+#### **Despliegue en Producción (Alternativas)**
+
+**Frontend (Vercel/Netlify):**
+```bash
+npm run build
+# Subir carpeta /client/dist
+```
+
+**Backend (Railway/Render/AWS):**
+```bash
+# Configurar DATABASE_URL de PostgreSQL
+# Ejecutar migraciones: npx prisma migrate deploy
+# Iniciar: npm run start
+```
+
+#### **Configuración de Dominio Personalizado**
+#### **SSL/HTTPS Obligatorio**
+#### **Backups de Base de Datos**
+
+***
+
+### **9. /docs/TROUBLESHOOTING.md** - Solución de Problemas (80-100 líneas)
+
+**Problemas Comunes:**
+
+**Error: "JWT token inválido"**
+- Solución: Verificar JWT_SECRET en .env
+
+**Error: "Base de datos no conecta"**
+- Solución: Verificar DATABASE_URL
+
+**Error: "Prisma Client error"**
+- Solución: `npx prisma generate`
+
+**Error: "CORS blocked"**
+- Solución: Verificar configuración de CORS en server/index.ts
+
+**No llegan emails**
+- Solución: Verificar credenciales SMTP
+
+***
+
+### **10. /docs/CHANGELOG.md** - Historial de Cambios
+
+**Formato:**
+```markdown
+# Changelog
+
+## [1.0.0] - 2025-11-09
+### Added
+- Sistema de autenticación JWT
+- CRUD completo de cursos
+- Sistema de inscripciones
+- Panel de administración
+- Integración con Stripe
+- Sistema de citas
+
+### Changed
+- Migrado de HTML vanilla a React
+
+### Fixed
+- Bug en cálculo de progreso
+```
+
+***
+
+## ✅ REQUISITOS DE FORMATO
+
+- Usar Markdown con sintaxis correcta
+- Incluir diagramas en formato Mermaid donde sea apropiado
+- Código con syntax highlighting (```typescript, ```
+- Secciones con headers claros (##, ###)
+- Ejemplos de código funcionales y testeados
+- TOC (Table of Contents) al inicio de documentos largos
+- Links entre documentos cuando se referencien
+
+***
+
+## 🎯 PRIORIDAD DE GENERACIÓN
+
+1. **CRÍTICO:** API.md, ADMIN_MANUAL.md, USER_MANUAL.md
+2. **IMPORTANTE:** README.md, ARCHITECTURE.md, DATABASE.md  
+3. **COMPLEMENTARIO:** SETUP.md, DEPLOYMENT.md, TROUBLESHOOTING.md, CHANGELOG.md
+
+***
+
+**Genera todos los archivos de forma exhaustiva pero concisa, con ejemplos prácticos y claros. La documentación debe permitir que cualquier desarrollador o usuario pueda entender y usar el sistema sin ayuda adicional.**
+
