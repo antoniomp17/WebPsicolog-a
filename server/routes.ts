@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertStudentSchema, insertAppointmentSchema, registerUserSchema, insertEnrollmentSchema } from "@shared/schema";
 import { hashPassword, verifyPassword, generateToken, authMiddleware, type AuthRequest } from "./auth";
 import Stripe from "stripe";
+import { sendWelcomeEmail, sendPaymentConfirmationEmail, sendAppointmentConfirmationEmail } from "./email";
 
 // Reference: Stripe integration blueprint (blueprint:javascript_stripe)
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -40,6 +41,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate token
       const token = generateToken(user.id);
+
+      // Send welcome email (non-blocking)
+      sendWelcomeEmail({
+        userName: user.fullName,
+        userEmail: user.email,
+      }).catch(error => {
+        console.error('Failed to send welcome email:', error);
+      });
 
       // Return user without password, with name field for frontend
       const { passwordHash: _, fullName, ...userRest } = user;
@@ -249,6 +258,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentIntentId
       );
 
+      // Get user and course info for email
+      const user = await storage.getUser(userId);
+      const course = await storage.getCourse(enrollment.courseId);
+
+      if (user && course) {
+        // Send payment confirmation email (non-blocking)
+        sendPaymentConfirmationEmail({
+          userName: user.fullName,
+          userEmail: user.email,
+          courseName: course.title,
+          amount: paymentIntent.amount,
+          paymentDate: new Date().toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }),
+        }).catch(error => {
+          console.error('Failed to send payment confirmation email:', error);
+        });
+      }
+
       res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ 
@@ -356,6 +386,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const appointment = await storage.createAppointment(validatedData);
+
+      // Send appointment confirmation email (non-blocking)
+      sendAppointmentConfirmationEmail({
+        userName: appointment.name,
+        userEmail: appointment.email,
+        appointmentDate: new Date(appointment.date).toLocaleDateString('es-ES', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        appointmentTime: appointment.time,
+      }).catch(error => {
+        console.error('Failed to send appointment confirmation email:', error);
+      });
+
       res.json(appointment);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
