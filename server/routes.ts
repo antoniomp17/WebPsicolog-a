@@ -389,7 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Send appointment confirmation email (non-blocking)
       sendAppointmentConfirmationEmail({
-        userName: appointment.name,
+        userName: appointment.fullName,
         userEmail: appointment.email,
         appointmentDate: new Date(appointment.date).toLocaleDateString('es-ES', {
           weekday: 'long',

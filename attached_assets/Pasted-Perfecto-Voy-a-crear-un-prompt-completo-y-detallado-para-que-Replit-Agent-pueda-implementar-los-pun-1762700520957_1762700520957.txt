@@ -1,0 +1,476 @@
+Perfecto. Voy a crear un prompt completo y detallado para que Replit Agent pueda implementar los puntos críticos prioritarios.
+
+***
+
+# 🎯 PROMPT PARA REPLIT AGENT - IMPLEMENTACIÓN PRIORITARIA
+
+## CONTEXTO DEL PROYECTO
+
+Tienes un proyecto **PsicoBienestar** en Replit con:
+- ✅ Frontend React + TypeScript completamente funcional
+- ✅ Base de datos PostgreSQL con Prisma configurada
+- ✅ Schema de Prisma completo con todos los modelos
+- ✅ Estructura backend Express en `/server`
+- ⚠️ Backend **parcialmente implementado** - faltan componentes críticos
+
+**URL del proyecto:** `https://00f2db73-ca72-4194-95ef-c20a85b3f49f-00-wrticylrv80g.janeway.replit.dev/`
+
+***
+
+## 🎯 OBJETIVO
+
+Completar las **funcionalidades críticas faltantes** para que el sitio sea completamente funcional:
+
+1. ✅ Completar sistema de autenticación backend
+2. ✅ Implementar todas las rutas de API necesarias
+3. ✅ Crear página de detalle individual de curso
+4. ✅ Conectar frontend con backend (hacer llamadas API reales)
+5. ✅ Implementar protección de rutas autenticadas
+6. ✅ Crear panel de administración básico
+
+***
+
+## 📋 TAREAS PRIORITARIAS (EN ORDEN)
+
+### **FASE 1: BACKEND - AUTENTICACIÓN Y APIS (CRÍTICO)**
+
+#### **1.1. Completar `server/auth.ts`**
+
+Asegúrate de que este archivo contenga:
+
+```typescript
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import { db } from './db';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'tu-secreto-super-seguro-cambiame-en-produccion';
+const JWT_EXPIRES_IN = '7d';
+
+// Interfaces
+interface JWTPayload {
+  userId: string;
+  email: string;
+  role: string;
+}
+
+// Middleware de autenticación
+export async function authenticateToken(req: Request, res: Response, next: NextFunction) {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) {
+      return res.status(401).json({ error: 'Token no proporcionado' });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    
+    // Verificar que el usuario existe
+    const user = await db.user.findUnique({
+      where: { id: decoded.userId }
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Agregar usuario al request
+    req.user = {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      fullName: user.fullName
+    };
+
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'Token inválido o expirado' });
+  }
+}
+
+// Middleware de autorización por rol
+export function requireRole(...roles: string[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'No tienes permisos para esta acción' });
+    }
+
+    next();
+  };
+}
+
+// Funciones de utilidad
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
+}
+
+export async function comparePassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
+}
+
+export function generateToken(userId: string, email: string, role: string): string {
+  return jwt.sign(
+    { userId, email, role } as JWTPayload,
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN }
+  );
+}
+
+// Tipos para Express Request
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        userId: string;
+        email: string;
+        role: string;
+        fullName: string;
+      };
+    }
+  }
+}
+```
+
+***
+
+#### **1.2. Completar `server/routes.ts` - TODAS LAS RUTAS**
+
+Este es el archivo **MÁS CRÍTICO**. Debe contener:
+
+```typescript
+import { Router } from 'express';
+import { db } from './db';
+import { authenticateToken, requireRole, hashPassword, comparePassword, generateToken } from './auth';
+import { sendEmail } from './email';
+
+const router = Router();
+
+// ============================================
+// RUTAS DE AUTENTICACIÓN
+// ============================================
+
+// POST /api/auth/register - Registro de usuario
+router.post('/auth/register', async (req, res) => {
+  try {
+    const { fullName, email, password } = req.body;
+
+    // Validaciones
+    if (!fullName || !email || !password) {
+      return res.status(400).json({ error: 'Todos los campos son requeridos' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    }
+
+    // Verificar si el usuario ya existe
+    const existingUser = await db.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ error: 'El email ya está registrado' });
+    }
+
+    // Crear usuario
+    const passwordHash = await hashPassword(password);
+    const user = await db.user.create({
+      data: {
+        fullName,
+        email,
+        passwordHash,
+        role: 'STUDENT'
+      }
+    });
+
+    // Generar token
+    const token = generateToken(user.id, user.email, user.role);
+
+    // Enviar email de bienvenida (opcional, no bloquear registro si falla)
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Bienvenido a PsicoBienestar',
+        html: `<h1>¡Hola ${user.fullName}!</h1><p>Gracias por registrarte en PsicoBienestar.</p>`
+      });
+    } catch (emailError) {
+      console.error('Error enviando email de bienvenida:', emailError);
+    }
+
+    res.status(201).json({
+      message: 'Usuario registrado exitosamente',
+      token,
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Error en registro:', error);
+    res.status(500).json({ error: 'Error al registrar usuario' });
+  }
+});
+
+// POST /api/auth/login - Inicio de sesión
+router.post('/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email y contraseña son requeridos' });
+    }
+
+    // Buscar usuario
+    const user = await db.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+
+    // Verificar contraseña
+    const isValidPassword = await comparePassword(password, user.passwordHash);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+
+    // Generar token
+    const token = generateToken(user.id, user.email, user.role);
+
+    res.json({
+      message: 'Login exitoso',
+      token,
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({ error: 'Error al iniciar sesión' });
+  }
+});
+
+// GET /api/auth/me - Obtener usuario actual
+router.get('/auth/me', authenticateToken, async (req, res) => {
+  try {
+    const user = await db.user.findUnique({
+      where: { id: req.user!.userId },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: true,
+        createdAt: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    res.json({ user });
+  } catch (error) {
+    console.error('Error obteniendo usuario:', error);
+    res.status(500).json({ error: 'Error al obtener usuario' });
+  }
+});
+
+// ============================================
+// RUTAS DE CURSOS (PÚBLICAS)
+// ============================================
+
+// GET /api/courses - Listar todos los cursos publicados
+router.get('/courses', async (req, res) => {
+  try {
+    const courses = await db.course.findMany({
+      where: { isPublished: true },
+      include: {
+        _count: {
+          select: { enrollments: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json({ courses });
+  } catch (error) {
+    console.error('Error obteniendo cursos:', error);
+    res.status(500).json({ error: 'Error al obtener cursos' });
+  }
+});
+
+// GET /api/courses/featured - Cursos destacados
+router.get('/courses/featured', async (req, res) => {
+  try {
+    const courses = await db.course.findMany({
+      where: {
+        isPublished: true,
+        isFeatured: true
+      },
+      take: 3,
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json({ courses });
+  } catch (error) {
+    console.error('Error obteniendo cursos destacados:', error);
+    res.status(500).json({ error: 'Error al obtener cursos destacados' });
+  }
+});
+
+// GET /api/courses/:slug - Detalle de un curso
+router.get('/courses/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const course = await db.course.findUnique({
+      where: { slug },
+      include: {
+        modules: {
+          include: {
+            lessons: {
+              orderBy: { orderIndex: 'asc' }
+            }
+          },
+          orderBy: { orderIndex: 'asc' }
+        },
+        _count: {
+          select: { enrollments: true }
+        }
+      }
+    });
+
+    if (!course) {
+      return res.status(404).json({ error: 'Curso no encontrado' });
+    }
+
+    // Si no está publicado, solo admin puede verlo
+    if (!course.isPublished) {
+      return res.status(403).json({ error: 'Este curso no está disponible' });
+    }
+
+    res.json({ course });
+  } catch (error) {
+    console.error('Error obteniendo curso:', error);
+    res.status(500).json({ error: 'Error al obtener curso' });
+  }
+});
+
+// ============================================
+// RUTAS DE INSCRIPCIONES (REQUIERE AUTH)
+// ============================================
+
+// POST /api/enrollments - Inscribirse a un curso
+router.post('/enrollments', authenticateToken, async (req, res) => {
+  try {
+    const { courseId } = req.body;
+    const userId = req.user!.userId;
+
+    if (!courseId) {
+      return res.status(400).json({ error: 'courseId es requerido' });
+    }
+
+    // Verificar que el curso existe
+    const course = await db.course.findUnique({ where: { id: courseId } });
+    if (!course) {
+      return res.status(404).json({ error: 'Curso no encontrado' });
+    }
+
+    // Verificar si ya está inscrito
+    const existingEnrollment = await db.enrollment.findUnique({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId
+        }
+      }
+    });
+
+    if (existingEnrollment) {
+      return res.status(400).json({ error: 'Ya estás inscrito en este curso' });
+    }
+
+    // Crear inscripción (estado PENDING hasta que se confirme el pago)
+    const enrollment = await db.enrollment.create({
+      data: {
+        userId,
+        courseId,
+        paymentStatus: 'PENDING'
+      }
+    });
+
+    res.status(201).json({
+      message: 'Inscripción creada. Procede al pago.',
+      enrollment
+    });
+  } catch (error) {
+    console.error('Error creando inscripción:', error);
+    res.status(500).json({ error: 'Error al crear inscripción' });
+  }
+});
+
+// GET /api/student/courses - Mis cursos inscritos
+router.get('/student/courses', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+
+    const enrollments = await db.enrollment.findMany({
+      where: {
+        userId,
+        paymentStatus: 'COMPLETED'
+      },
+      include: {
+        course: {
+          include: {
+            modules: {
+              include: {
+                lessons: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    res.json({ enrollments });
+  } catch (error) {
+    console.error('Error obteniendo cursos del estudiante:', error);
+    res.status(500).json({ error: 'Error al obtener cursos' });
+  }
+});
+
+// ============================================
+// RUTAS DE CITAS (APPOINTMENTS)
+// ============================================
+
+// GET /api/appointments/availability - Horarios disponibles
+router.get('/appointments/availability', async (req, res) => {
+  try {
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({ error: 'Fecha es requerida' });
+    }
+
+    // Obtener todas las citas confirmadas para esa fecha
+    const appointments = await db.appointment.findMany({
+      where: {
+        appointmentDate: new Date(date as string),
+        status: {
+          in: ['PENDING', 'CONFIRMED']
+        }
+      },
+      select: {
+        appointmentTime: true
+      }
+    });
+
+    // Horarios disponibles (ejemplo: 9:00, 10:00, 11:00, 16:00, 17:00)
+    const allSlots = ['09:00', '10:00', '11:00', '16:00', '17:00'];
+    const occupiedSlots = appointments.map(a => 
+      a.appointmentTime.toISOString().substring(11, 16)
