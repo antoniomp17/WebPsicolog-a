@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertStudentSchema, insertAppointmentSchema, registerUserSchema, insertEnrollmentSchema } from "@shared/schema";
-import { hashPassword, verifyPassword, generateToken, authMiddleware, type AuthRequest } from "./auth";
+import { hashPassword, verifyPassword, generateToken, authMiddleware, type AuthRequest, authMiddlewareWithUser, requireAdminMiddleware } from "./auth";
 import Stripe from "stripe";
 import { sendWelcomeEmail, sendPaymentConfirmationEmail, sendAppointmentConfirmationEmail } from "./email";
 
@@ -494,6 +494,194 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Artículo no encontrado" });
       }
       res.json(article);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin middleware pipeline
+  const adminMiddleware = await requireAdminMiddleware(storage);
+
+  // ============================================
+  // ADMIN ROUTES
+  // ============================================
+
+  // Dashboard statistics
+  app.get("/api/admin/dashboard", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const [users, courses, appointments, enrollments] = await Promise.all([
+        storage.getAllUsers(),
+        storage.getAllCoursesAdmin(),
+        storage.getAllAppointments(),
+        storage.getAllEnrollments(),
+      ]);
+
+      const publishedCourses = courses.filter(c => c.isPublished).length;
+      const completedEnrollments = enrollments.filter(e => e.paymentStatus === "completed");
+      const totalRevenue = completedEnrollments.reduce((sum, e) => {
+        const course = courses.find(c => c.id === e.courseId);
+        return sum + (course ? parseFloat(course.price) : 0);
+      }, 0);
+
+      // Appointments this week
+      const today = new Date();
+      const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+      const appointmentsThisWeek = appointments.filter(apt => {
+        const aptDate = new Date(apt.date);
+        return aptDate >= startOfWeek && aptDate < endOfWeek;
+      });
+
+      res.json({
+        totalUsers: users.length,
+        totalCourses: courses.length,
+        publishedCourses,
+        totalAppointments: appointments.length,
+        appointmentsThisWeek: appointmentsThisWeek.length,
+        totalEnrollments: enrollments.length,
+        completedEnrollments: completedEnrollments.length,
+        totalRevenue: totalRevenue.toFixed(2),
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // User management
+  app.get("/api/admin/users", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Remove password hashes from response
+      const safeUsers = users.map(({ passwordHash, ...user }) => user);
+      res.json(safeUsers);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/users/:id/role", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { role } = req.body;
+
+      if (!["student", "admin", "therapist"].includes(role)) {
+        return res.status(400).json({ error: "Rol inválido" });
+      }
+
+      await storage.updateUserRole(id, role);
+      res.json({ message: "Rol actualizado exitosamente" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+
+      // Prevent admin from deleting themselves
+      if (id === req.userId) {
+        return res.status(400).json({ error: "No puedes eliminar tu propia cuenta" });
+      }
+
+      await storage.deleteUser(id);
+      res.json({ message: "Usuario eliminado exitosamente" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Course management
+  app.get("/api/admin/courses", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const courses = await storage.getAllCoursesAdmin();
+      res.json(courses);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/courses/:id/publish", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { isPublished } = req.body;
+
+      if (typeof isPublished !== "boolean") {
+        return res.status(400).json({ error: "isPublished debe ser un booleano" });
+      }
+
+      await storage.updateCoursePublishStatus(id, isPublished);
+      res.json({ message: `Curso ${isPublished ? "publicado" : "despublicado"} exitosamente` });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/courses/:id/feature", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { isFeatured } = req.body;
+
+      if (typeof isFeatured !== "boolean") {
+        return res.status(400).json({ error: "isFeatured debe ser un booleano" });
+      }
+
+      await storage.updateCourseFeaturedStatus(id, isFeatured);
+      res.json({ message: `Curso ${isFeatured ? "marcado" : "desmarcado"} como destacado` });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Appointment management
+  app.get("/api/admin/appointments", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const appointments = await storage.getAllAppointments();
+      res.json(appointments);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/appointments/:id/status", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!["pending", "confirmed", "cancelled", "completed"].includes(status)) {
+        return res.status(400).json({ error: "Estado inválido" });
+      }
+
+      await storage.updateAppointmentStatus(id, status);
+      res.json({ message: "Estado de la cita actualizado exitosamente" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/appointments/:id/video-link", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { videoCallLink } = req.body;
+
+      if (!videoCallLink || typeof videoCallLink !== "string") {
+        return res.status(400).json({ error: "El enlace de video es requerido" });
+      }
+
+      await storage.updateAppointmentVideoLink(id, videoCallLink);
+      res.json({ message: "Enlace de video agregado exitosamente" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Enrollment management
+  app.get("/api/admin/enrollments", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const enrollments = await storage.getAllEnrollments();
+      res.json(enrollments);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

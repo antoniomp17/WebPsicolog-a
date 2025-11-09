@@ -25,6 +25,8 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
+  updateUserRole(userId: string, role: "student" | "admin" | "therapist"): Promise<void>;
+  deleteUser(userId: string): Promise<void>;
 
   // Students
   getStudent(id: string): Promise<Student | undefined>;
@@ -37,21 +39,28 @@ export interface IStorage {
   getAppointmentsByDate(date: string): Promise<Appointment[]>;
   getAllAppointments(): Promise<Appointment[]>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
+  updateAppointmentStatus(appointmentId: string, status: "pending" | "confirmed" | "cancelled" | "completed"): Promise<void>;
+  updateAppointmentVideoLink(appointmentId: string, videoCallLink: string): Promise<void>;
 
   // Courses
   getAllCourses(): Promise<Course[]>;
+  getAllCoursesAdmin(): Promise<Course[]>;
   getCourse(id: string): Promise<Course | undefined>;
   getCourseBySlug(slug: string): Promise<Course | undefined>;
   getFeaturedCourses(): Promise<Course[]>;
+  updateCoursePublishStatus(courseId: string, isPublished: boolean): Promise<void>;
+  updateCourseFeaturedStatus(courseId: string, isFeatured: boolean): Promise<void>;
 
   // Articles
   getAllArticles(): Promise<Article[]>;
+  getAllArticlesAdmin(): Promise<Article[]>;
   getArticle(id: string): Promise<Article | undefined>;
   getArticleBySlug(slug: string): Promise<Article | undefined>;
 
   // Enrollments
   createEnrollment(enrollment: InsertEnrollment): Promise<Enrollment>;
   getUserEnrollments(userId: string): Promise<Enrollment[]>;
+  getAllEnrollments(): Promise<Enrollment[]>;
   getEnrollmentByCourseAndUser(userId: string, courseId: string): Promise<Enrollment | undefined>;
   getEnrollmentById(id: string): Promise<Enrollment | undefined>;
   updateEnrollmentPaymentStatus(enrollmentId: string, paymentStatus: "pending" | "completed" | "refunded", stripePaymentId?: string): Promise<void>;
@@ -76,6 +85,14 @@ export class DbStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+
+  async updateUserRole(userId: string, role: "student" | "admin" | "therapist"): Promise<void> {
+    await db.update(users).set({ role }).where(eq(users.id, userId));
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, userId));
   }
 
   // Students
@@ -117,9 +134,21 @@ export class DbStorage implements IStorage {
     return result[0];
   }
 
+  async updateAppointmentStatus(appointmentId: string, status: "pending" | "confirmed" | "cancelled" | "completed"): Promise<void> {
+    await db.update(appointments).set({ status }).where(eq(appointments.id, appointmentId));
+  }
+
+  async updateAppointmentVideoLink(appointmentId: string, videoCallLink: string): Promise<void> {
+    await db.update(appointments).set({ videoCallLink }).where(eq(appointments.id, appointmentId));
+  }
+
   // Courses
   async getAllCourses(): Promise<Course[]> {
     return await db.select().from(courses).where(eq(courses.isPublished, true));
+  }
+
+  async getAllCoursesAdmin(): Promise<Course[]> {
+    return await db.select().from(courses);
   }
 
   async getCourse(id: string): Promise<Course | undefined> {
@@ -138,9 +167,21 @@ export class DbStorage implements IStorage {
     );
   }
 
+  async updateCoursePublishStatus(courseId: string, isPublished: boolean): Promise<void> {
+    await db.update(courses).set({ isPublished }).where(eq(courses.id, courseId));
+  }
+
+  async updateCourseFeaturedStatus(courseId: string, isFeatured: boolean): Promise<void> {
+    await db.update(courses).set({ isFeatured }).where(eq(courses.id, courseId));
+  }
+
   // Articles
   async getAllArticles(): Promise<Article[]> {
     return await db.select().from(articles).where(eq(articles.isPublished, true));
+  }
+
+  async getAllArticlesAdmin(): Promise<Article[]> {
+    return await db.select().from(articles);
   }
 
   async getArticle(id: string): Promise<Article | undefined> {
@@ -161,6 +202,10 @@ export class DbStorage implements IStorage {
 
   async getUserEnrollments(userId: string): Promise<Enrollment[]> {
     return await db.select().from(enrollments).where(eq(enrollments.userId, userId));
+  }
+
+  async getAllEnrollments(): Promise<Enrollment[]> {
+    return await db.select().from(enrollments);
   }
 
   async getEnrollmentByCourseAndUser(userId: string, courseId: string): Promise<Enrollment | undefined> {

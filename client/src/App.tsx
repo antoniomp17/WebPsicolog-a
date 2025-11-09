@@ -16,6 +16,8 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Checkout from "@/pages/Checkout";
 import PaymentSuccess from "@/pages/PaymentSuccess";
+import AdminDashboard from "@/pages/AdminDashboard";
+import AdminUsers from "@/pages/AdminUsers";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -36,6 +38,8 @@ function Router() {
           <Route path="/registro" component={Register} />
           <Route path="/checkout/:enrollmentId" component={Checkout} />
           <Route path="/pago-exitoso" component={PaymentSuccess} />
+          <Route path="/admin" component={AdminDashboard} />
+          <Route path="/admin/users" component={AdminUsers} />
           <Route component={NotFound} />
         </Switch>
       </main>
