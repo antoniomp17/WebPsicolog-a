@@ -2,7 +2,6 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertStudentSchema, insertAppointmentSchema } from "@shared/schema";
-import { courses, articles } from "../client/src/lib/data";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Student routes
@@ -98,30 +97,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Courses routes (static data)
+  // Courses routes
   app.get("/api/courses", async (req, res) => {
-    res.json(courses);
+    try {
+      const allCourses = await storage.getAllCourses();
+      res.json(allCourses);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/courses/featured", async (req, res) => {
+    try {
+      const featuredCourses = await storage.getFeaturedCourses();
+      res.json(featuredCourses);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
   });
 
   app.get("/api/courses/:id", async (req, res) => {
-    const course = courses.find((c) => c.id === req.params.id);
-    if (!course) {
-      return res.status(404).json({ error: "Curso no encontrado" });
+    try {
+      // Try by ID first
+      let course = await storage.getCourse(req.params.id);
+      // If not found, try by slug
+      if (!course) {
+        course = await storage.getCourseBySlug(req.params.id);
+      }
+      if (!course) {
+        return res.status(404).json({ error: "Curso no encontrado" });
+      }
+      res.json(course);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
-    res.json(course);
   });
 
-  // Articles routes (static data)
+  // Articles routes
   app.get("/api/articles", async (req, res) => {
-    res.json(articles);
+    try {
+      const allArticles = await storage.getAllArticles();
+      res.json(allArticles);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
   });
 
   app.get("/api/articles/:id", async (req, res) => {
-    const article = articles.find((a) => a.id === req.params.id);
-    if (!article) {
-      return res.status(404).json({ error: "Artículo no encontrado" });
+    try {
+      // Try by ID first
+      let article = await storage.getArticle(req.params.id);
+      // If not found, try by slug
+      if (!article) {
+        article = await storage.getArticleBySlug(req.params.id);
+      }
+      if (!article) {
+        return res.status(404).json({ error: "Artículo no encontrado" });
+      }
+      res.json(article);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
-    res.json(article);
   });
 
   const httpServer = createServer(app);
