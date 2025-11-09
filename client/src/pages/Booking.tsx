@@ -50,7 +50,7 @@ export default function Booking() {
 
   const bookingMutation = useMutation({
     mutationFn: async (data: InsertAppointment) => {
-      return await apiRequest("POST", "/api/appointments", data);
+      return await apiRequest<Appointment>("POST", "/api/appointments", data);
     },
     onSuccess: () => {
       setBookingSuccess(true);
