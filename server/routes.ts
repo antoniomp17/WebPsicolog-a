@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertStudentSchema, insertAppointmentSchema, registerUserSchema, insertEnrollmentSchema } from "@shared/schema";
+import { insertStudentSchema, insertAppointmentSchema, registerUserSchema, insertEnrollmentSchema, insertCourseSchema, insertArticleSchema } from "@shared/schema";
 import { hashPassword, verifyPassword, generateToken, authMiddleware, type AuthRequest, authMiddlewareWithUser, requireAdminMiddleware } from "./auth";
 import Stripe from "stripe";
 import { sendWelcomeEmail, sendPaymentConfirmationEmail, sendAppointmentConfirmationEmail } from "./email";
@@ -630,6 +630,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await storage.updateCourseFeaturedStatus(id, isFeatured);
       res.json({ message: `Curso ${isFeatured ? "marcado" : "desmarcado"} como destacado` });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/admin/courses", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertCourseSchema.parse(req.body);
+      const course = await storage.createCourse(validatedData);
+      res.status(201).json(course);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/admin/courses/:id", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertCourseSchema.partial().parse(req.body);
+      
+      const course = await storage.getCourse(id);
+      if (!course) {
+        return res.status(404).json({ error: "Curso no encontrado" });
+      }
+
+      await storage.updateCourse(id, validatedData);
+      res.json({ message: "Curso actualizado exitosamente" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/courses/:id", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      
+      const course = await storage.getCourse(id);
+      if (!course) {
+        return res.status(404).json({ error: "Curso no encontrado" });
+      }
+
+      await storage.deleteCourse(id);
+      res.json({ message: "Curso eliminado exitosamente" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Article management
+  app.get("/api/admin/articles", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const articles = await storage.getAllArticlesAdmin();
+      res.json(articles);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/admin/articles", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertArticleSchema.parse(req.body);
+      const article = await storage.createArticle(validatedData);
+      res.status(201).json(article);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/admin/articles/:id", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertArticleSchema.partial().parse(req.body);
+      
+      const article = await storage.getArticle(id);
+      if (!article) {
+        return res.status(404).json({ error: "Artículo no encontrado" });
+      }
+
+      await storage.updateArticle(id, validatedData);
+      res.json({ message: "Artículo actualizado exitosamente" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/articles/:id/publish", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { isPublished } = req.body;
+
+      if (typeof isPublished !== "boolean") {
+        return res.status(400).json({ error: "isPublished debe ser un booleano" });
+      }
+
+      await storage.updateArticlePublishStatus(id, isPublished);
+      res.json({ message: `Artículo ${isPublished ? "publicado" : "despublicado"} exitosamente` });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/articles/:id", authMiddlewareWithUser, adminMiddleware, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      
+      const article = await storage.getArticle(id);
+      if (!article) {
+        return res.status(404).json({ error: "Artículo no encontrado" });
+      }
+
+      await storage.deleteArticle(id);
+      res.json({ message: "Artículo eliminado exitosamente" });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
