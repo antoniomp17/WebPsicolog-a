@@ -101,11 +101,11 @@ export function sendWelcomeEmail(data: WelcomeEmailData) {
       <body>
         <div class="container">
           <div class="header">
-            <h1>PsicoBienestar</h1>
+            <h1>PatriPsicología</h1>
           </div>
           <div class="content">
             <h2>¡Hola ${data.userName}!</h2>
-            <p>Nos alegra darte la bienvenida a PsicoBienestar, tu plataforma de psicología y bienestar.</p>
+            <p>Nos alegra darte la bienvenida a PatriPsicología, tu plataforma de psicología y bienestar.</p>
             <p>Aquí encontrarás:</p>
             <ul>
               <li>Cursos online especializados en gestión emocional</li>
@@ -116,7 +116,7 @@ export function sendWelcomeEmail(data: WelcomeEmailData) {
             <a href="${appUrl}/cursos" class="button">Explorar Cursos</a>
           </div>
           <div class="footer">
-            <p>PsicoBienestar - Tu bienestar es nuestra prioridad</p>
+            <p>PatriPsicología - Tu bienestar es nuestra prioridad</p>
           </div>
         </div>
       </body>
@@ -124,7 +124,7 @@ export function sendWelcomeEmail(data: WelcomeEmailData) {
   `;
 
   // No se usa 'await' para no bloquear la respuesta de la API
-  sendEmail(data.userEmail, '¡Bienvenido a PsicoBienestar!', html);
+  sendEmail(data.userEmail, '¡Bienvenido a PatriPsicología!', html);
 }
 
 /**
@@ -164,7 +164,7 @@ export function sendPaymentConfirmationEmail(data: PaymentConfirmationEmailData)
             <a href="${appUrl}/acceso-alumnos" class="button">Ir a Mis Cursos</a>
           </div>
           <div class="footer">
-            <p>PsicoBienestar - Tu bienestar es nuestra prioridad</p>
+            <p>PatriPsicología - Tu bienestar es nuestra prioridad</p>
             <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
           </div>
         </div>
@@ -172,7 +172,7 @@ export function sendPaymentConfirmationEmail(data: PaymentConfirmationEmailData)
     </html>
   `;
 
-  sendEmail(data.userEmail, '✓ Pago confirmado - PsicoBienestar', html);
+  sendEmail(data.userEmail, '✓ Pago confirmado - PatriPsicología', html);
 }
 
 /**
@@ -218,7 +218,7 @@ export function sendAppointmentConfirmationEmail(data: AppointmentConfirmationEm
             <p>Si necesitas reagendar o cancelar, por favor contáctanos con al menos 24 horas de anticipación.</p>
           </div>
           <div class="footer">
-            <p>PsicoBienestar - Tu bienestar es nuestra prioridad</p>
+            <p>PatriPsicología - Tu bienestar es nuestra prioridad</p>
             <p>¿Preguntas? Estamos aquí para ayudarte.</p>
           </div>
         </div>
@@ -226,5 +226,5 @@ export function sendAppointmentConfirmationEmail(data: AppointmentConfirmationEm
     </html>
   `;
 
-  sendEmail(data.userEmail, '✓ Cita confirmada - PsicoBienestar', html);
+  sendEmail(data.userEmail, '✓ Cita confirmada - PatriPsicología', html);
 }

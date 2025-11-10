@@ -11,7 +11,7 @@ export default {
         sm: ".1875rem", /* 3px */
       },
       colors: {
-        // Custom PsicoBienestar palette
+        // Custom PatriPsicología palette
         crema: '#FDFBF5',
         beige: '#F0EDE7',
         arena: '#E7D4B5',

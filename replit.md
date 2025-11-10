@@ -1,8 +1,8 @@
-# PsicoBienestar - Psychology & Wellness Platform
+# PatriPsicología - Psychology & Wellness Platform
 
 ## Overview
 
-PsicoBienestar is a psychology and wellness platform offering online courses, therapy sessions, and mental health resources. The application provides a warm, accessible interface for users to explore courses on topics like anxiety management, mindfulness, and emotional regulation, while also enabling them to book individual therapy appointments.
+PatriPsicología is a psychology and wellness platform offering online courses, therapy sessions, and mental health resources. The application provides a warm, accessible interface for users to explore courses on topics like anxiety management, mindfulness, and emotional regulation, while also enabling them to book individual therapy appointments.
 
 **Core Purpose**: Connect mental health professionals with clients through educational content and therapy scheduling, all within an inviting, trustworthy digital environment.
 

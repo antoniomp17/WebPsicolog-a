@@ -38,7 +38,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" data-testid="link-home">
             <span className="text-2xl font-bold text-marron hover:text-dorado transition-colors cursor-pointer">
-              PsicoBienestar
+              PatriPsicología
             </span>
           </Link>
 
