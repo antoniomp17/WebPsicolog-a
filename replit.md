@@ -236,3 +236,45 @@ The application uses an interface-based storage abstraction (`IStorage`) impleme
 **Role-based access**: Three-tier user system (student, therapist, admin) enables future expansion of therapist-specific features while maintaining clean access control for admin panel.
 
 **External video conferencing**: Deliberately chose not to implement in-app video calls. Therapists use external tools (Google Meet, Zoom) and can add video links to confirmed appointments via admin panel.
+
+## Recent Changes
+
+### Admin Panel CRUD Implementation (November 2025)
+
+**Full CRUD for Courses and Articles:**
+- Implemented complete create, read, update, and delete operations for both courses and articles
+- Added dedicated admin pages: `/admin/courses` and `/admin/articles`
+- All operations protected by admin middleware (role-based access control)
+
+**Backend API Endpoints:**
+- `POST /api/admin/courses` - Create new course with full validation
+- `PUT /api/admin/courses/:id` - Update existing course (partial updates supported)
+- `DELETE /api/admin/courses/:id` - Delete course
+- `POST /api/admin/articles` - Create new article with slug generation
+- `PUT /api/admin/articles/:id` - Update existing article
+- `DELETE /api/admin/articles/:id` - Delete article
+
+**Schema Improvements:**
+- Added `z.coerce` type coercion for numeric fields (price, durationWeeks, viewsCount)
+- Added `z.coerce.date()` for publishedAt timestamp field to handle HTML date input strings
+- Ensures type safety and proper validation across the full stack
+
+**UI/UX Enhancements:**
+- Integrated shadcn/ui Switch components for boolean fields (isPublished, isFeatured)
+- Create and edit operations use Dialog components with comprehensive forms
+- Delete operations use AlertDialog with confirmation step
+- Real-time toast notifications for all CRUD operations
+- Badge components for status visualization (Publicado/Borrador/Destacado)
+- All form fields properly integrated with react-hook-form
+- Unique data-testid attributes on all interactive elements for automated testing
+
+**Form Validation:**
+- Client-side validation using Zod schemas with react-hook-form
+- Server-side validation using same Zod schemas for consistency
+- Proper error handling and user feedback via toast notifications
+
+**Testing:**
+- Comprehensive e2e test coverage using Playwright
+- Verified all CRUD operations for courses and articles
+- Tested Switch component integration and state persistence
+- Validated form submissions, edits, and deletions
