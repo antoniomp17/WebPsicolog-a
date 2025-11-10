@@ -1,4 +1,4 @@
-# 🧠 PsicoBienestar - Plataforma de Psicología y Bienestar
+# 🧠 Navégate Psicología - Plataforma de Psicología y Bienestar
 
 Plataforma web completa para servicios de psicología y bienestar mental que combina cursos online, sistema de citas terapéuticas, y gestión administrativa integral.
 
