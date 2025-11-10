@@ -404,7 +404,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(appointment);
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      // Handle cases where error is null, undefined, or doesn't have a message property
+      const errorMessage = error?.message || 'Error desconocido al crear la cita';
+      res.status(400).json({ error: errorMessage });
     }
   });
 
