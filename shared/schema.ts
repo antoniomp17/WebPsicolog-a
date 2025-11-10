@@ -186,6 +186,7 @@ export const insertArticleSchema = createInsertSchema(articles).omit({
   updatedAt: true,
 }).extend({
   viewsCount: z.coerce.number().int().nonnegative().optional().default(0),
+  publishedAt: z.coerce.date(),
 });
 
 export type InsertArticle = z.infer<typeof insertArticleSchema>;
