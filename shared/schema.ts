@@ -78,6 +78,9 @@ export const insertCourseSchema = createInsertSchema(courses).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  price: z.coerce.number().nonnegative().transform(val => val.toFixed(2)),
+  durationWeeks: z.coerce.number().int().positive(),
 });
 
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
@@ -181,6 +184,8 @@ export const insertArticleSchema = createInsertSchema(articles).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  viewsCount: z.coerce.number().int().nonnegative().optional().default(0),
 });
 
 export type InsertArticle = z.infer<typeof insertArticleSchema>;
