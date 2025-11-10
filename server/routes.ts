@@ -407,6 +407,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Keep the fallback formattedDate if date parsing fails
       }
       
+      // Check if appointment is valid before sending response
+      if (!appointment) {
+        console.error('Appointment creation returned undefined');
+        return res.status(500).json({ error: 'La creación de la cita falló' });
+      }
+
       sendAppointmentConfirmationEmail({
         userName: appointment.fullName,
         userEmail: appointment.email,
@@ -428,7 +434,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         errorMessage = error;
       }
       
-      res.status(400).json({ error: errorMessage });
+      // Use 500 for server errors rather than 400, as this may not be a client error
+      res.status(500).json({ error: errorMessage });
     }
   });
 
