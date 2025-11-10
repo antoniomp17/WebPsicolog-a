@@ -419,7 +419,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(appointment);
     } catch (error: any) {
       // Handle cases where error is null, undefined, or doesn't have a message property
-      const errorMessage = error?.message || 'Error desconocido al crear la cita';
+      // Be extra safe when accessing error properties
+      let errorMessage = 'Error desconocido al crear la cita';
+      
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       res.status(400).json({ error: errorMessage });
     }
   });
