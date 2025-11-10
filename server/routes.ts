@@ -388,15 +388,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const appointment = await storage.createAppointment(validatedData);
 
       // Send appointment confirmation email (non-blocking)
+      // Format date safely for the email
+      let formattedDate = appointment.date; // fallback to raw date string
+      try {
+        // Ensure the date string is in a proper format for Date constructor
+        // If it's in YYYY-MM-DD format, we should handle it properly
+        const dateObj = new Date(appointment.date);
+        if (!isNaN(dateObj.getTime())) { // Check if date is valid
+          formattedDate = dateObj.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          });
+        }
+      } catch (error) {
+        console.error('Error formatting appointment date for email:', error);
+        // Keep the fallback formattedDate if date parsing fails
+      }
+      
       sendAppointmentConfirmationEmail({
         userName: appointment.fullName,
         userEmail: appointment.email,
-        appointmentDate: new Date(appointment.date).toLocaleDateString('es-ES', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        }),
+        appointmentDate: formattedDate,
         appointmentTime: appointment.time,
       }).catch(error => {
         console.error('Failed to send appointment confirmation email:', error);
