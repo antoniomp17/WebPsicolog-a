@@ -18,6 +18,9 @@ import Checkout from "@/pages/Checkout";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminUsers from "@/pages/AdminUsers";
+import AdminCourses from "@/pages/AdminCourses";
+import AdminAppointments from "@/pages/AdminAppointments";
+import AdminEnrollments from "@/pages/AdminEnrollments";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -40,6 +43,9 @@ function Router() {
           <Route path="/pago-exitoso" component={PaymentSuccess} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/users" component={AdminUsers} />
+          <Route path="/admin/courses" component={AdminCourses} />
+          <Route path="/admin/appointments" component={AdminAppointments} />
+          <Route path="/admin/enrollments" component={AdminEnrollments} />
           <Route component={NotFound} />
         </Switch>
       </main>
