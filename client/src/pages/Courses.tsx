@@ -40,7 +40,8 @@ export default function Courses() {
         title: "¡Inscripción iniciada!",
         description: "Tu inscripción está pendiente de pago. Redirigiendo al pago...",
       });
-      // TODO: Redirect to payment page (Stripe) in Task 4
+      // Redirect to the checkout page with the enrollment ID
+      navigate(`/checkout/${data.id}`);
     },
     onError: (error: any) => {
       toast({
