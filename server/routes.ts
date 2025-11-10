@@ -413,6 +413,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: 'La creación de la cita falló' });
       }
 
+      // Send response immediately to client before non-blocking email
+      res.json(appointment);
+
+      // Send appointment confirmation email (non-blocking)
       sendAppointmentConfirmationEmail({
         userName: appointment.fullName,
         userEmail: appointment.email,
@@ -421,8 +425,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }).catch(error => {
         console.error('Failed to send appointment confirmation email:', error);
       });
-
-      res.json(appointment);
     } catch (error) {
       // Log error type without accessing properties that might cause issues
       console.error('Error in appointment creation:', typeof error, error?.constructor?.name);
