@@ -423,18 +423,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       res.json(appointment);
-    } catch (error: any) {
-      // Handle cases where error is null, undefined, or doesn't have a message property
-      // Be extra safe when accessing error properties
+    } catch (error) {
+      // Log error type without accessing properties that might cause issues
+      console.error('Error in appointment creation:', typeof error, error?.constructor?.name);
+      
+      // Use the most defensive approach to get an error message
       let errorMessage = 'Error desconocido al crear la cita';
       
-      if (error && typeof error === 'object' && 'message' in error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
+      try {
+        // Only access message property if error is a proper object
+        if (error && typeof error === 'object' && error.message && typeof error.message === 'string') {
+          errorMessage = error.message;
+        } else if (typeof error === 'string') {
+          errorMessage = error;
+        }
+      } catch (msgError) {
+        // If accessing the message property causes an error, use default
+        console.error('Error accessing error message property:', msgError);
       }
       
-      // Use 500 for server errors rather than 400, as this may not be a client error
+      // Send response with safe error message
       res.status(500).json({ error: errorMessage });
     }
   });
