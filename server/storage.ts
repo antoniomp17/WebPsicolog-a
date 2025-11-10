@@ -5,7 +5,9 @@ import {
   type Appointment,
   type InsertAppointment,
   type Course,
+  type InsertCourse,
   type Article,
+  type InsertArticle,
   type User,
   type InsertUser,
   type Enrollment,
@@ -48,14 +50,21 @@ export interface IStorage {
   getCourse(id: string): Promise<Course | undefined>;
   getCourseBySlug(slug: string): Promise<Course | undefined>;
   getFeaturedCourses(): Promise<Course[]>;
+  createCourse(course: InsertCourse): Promise<Course>;
+  updateCourse(courseId: string, course: Partial<InsertCourse>): Promise<void>;
   updateCoursePublishStatus(courseId: string, isPublished: boolean): Promise<void>;
   updateCourseFeaturedStatus(courseId: string, isFeatured: boolean): Promise<void>;
+  deleteCourse(courseId: string): Promise<void>;
 
   // Articles
   getAllArticles(): Promise<Article[]>;
   getAllArticlesAdmin(): Promise<Article[]>;
   getArticle(id: string): Promise<Article | undefined>;
   getArticleBySlug(slug: string): Promise<Article | undefined>;
+  createArticle(article: InsertArticle): Promise<Article>;
+  updateArticle(articleId: string, article: Partial<InsertArticle>): Promise<void>;
+  updateArticlePublishStatus(articleId: string, isPublished: boolean): Promise<void>;
+  deleteArticle(articleId: string): Promise<void>;
 
   // Enrollments
   createEnrollment(enrollment: InsertEnrollment): Promise<Enrollment>;
@@ -175,6 +184,19 @@ export class DbStorage implements IStorage {
     await db.update(courses).set({ isFeatured }).where(eq(courses.id, courseId));
   }
 
+  async createCourse(insertCourse: InsertCourse): Promise<Course> {
+    const result = await db.insert(courses).values(insertCourse).returning();
+    return result[0];
+  }
+
+  async updateCourse(courseId: string, course: Partial<InsertCourse>): Promise<void> {
+    await db.update(courses).set({ ...course, updatedAt: new Date() }).where(eq(courses.id, courseId));
+  }
+
+  async deleteCourse(courseId: string): Promise<void> {
+    await db.delete(courses).where(eq(courses.id, courseId));
+  }
+
   // Articles
   async getAllArticles(): Promise<Article[]> {
     return await db.select().from(articles).where(eq(articles.isPublished, true));
@@ -192,6 +214,23 @@ export class DbStorage implements IStorage {
   async getArticleBySlug(slug: string): Promise<Article | undefined> {
     const result = await db.select().from(articles).where(eq(articles.slug, slug)).limit(1);
     return result[0];
+  }
+
+  async createArticle(insertArticle: InsertArticle): Promise<Article> {
+    const result = await db.insert(articles).values(insertArticle).returning();
+    return result[0];
+  }
+
+  async updateArticle(articleId: string, article: Partial<InsertArticle>): Promise<void> {
+    await db.update(articles).set({ ...article, updatedAt: new Date() }).where(eq(articles.id, articleId));
+  }
+
+  async updateArticlePublishStatus(articleId: string, isPublished: boolean): Promise<void> {
+    await db.update(articles).set({ isPublished }).where(eq(articles.id, articleId));
+  }
+
+  async deleteArticle(articleId: string): Promise<void> {
+    await db.delete(articles).where(eq(articles.id, articleId));
   }
 
   // Enrollments
