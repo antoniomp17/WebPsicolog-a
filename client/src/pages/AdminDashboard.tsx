@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, Calendar, DollarSign, TrendingUp, CheckCircle } from "lucide-react";
+import { Users, BookOpen, Calendar, DollarSign, TrendingUp, CheckCircle, FileText } from "lucide-react";
 
 interface DashboardStats {
   totalUsers: number;
@@ -181,6 +181,19 @@ export default function AdminDashboard() {
                   <div>
                     <p className="font-semibold text-marron dark:text-white">Ver Pagos</p>
                     <p className="text-sm text-gris-medio">Gestionar inscripciones y pagos</p>
+                  </div>
+                </div>
+              </button>
+              <button
+                onClick={() => setLocation("/admin/articles")}
+                className="w-full text-left px-4 py-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                data-testid="button-manage-articles"
+              >
+                <div className="flex items-center">
+                  <FileText className="h-5 w-5 text-dorado mr-3" />
+                  <div>
+                    <p className="font-semibold text-marron dark:text-white">Gestionar Artículos</p>
+                    <p className="text-sm text-gris-medio">Crear, editar y publicar artículos del blog</p>
                   </div>
                 </div>
               </button>
