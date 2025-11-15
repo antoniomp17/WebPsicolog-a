@@ -32,7 +32,7 @@ export default function Home() {
             <Button
               size="lg"
               variant="outline"
-              className="border-dorado text-dorado hover:bg-secondary shadow-md w-full sm:w-auto"
+              className="bg-white border-dorado text-dorado hover:bg-secondary shadow-md w-full sm:w-auto"
             >
               Agendar Sesión
             </Button>
